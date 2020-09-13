@@ -69,6 +69,7 @@ class VRP_Problem:
         self.distances_array = np.round(self.distances_array, 2)
         self.travel_times_array = travel_times_multiplier*np.round(self.distances_array, 2)
         self.df = pd.DataFrame({'xcoord' : x, 'ycoord' : y, 'start time' : self.start_times, 'end time' : self.end_times, 'service time' : self.service_times})
+        logging.info(a.df)
         return
 #random genrator still throwing errors, trying to add a depot creation feature
     def random_data_generator(self, instances, timeframe, locationframe, servicetime, serviceframe, travel_times_multiplier):
@@ -165,24 +166,14 @@ class VRP_Problem:
         ldt = self.end_times[y]-self.service_times[y]-self.travel_times_array[x][y]-self.service_times[x]
         return ldt
 
-    def dumas_before(self, x):
-        for i in self.all_points_set:
-                if self.start_times[i]+self.service_times[i]+self.travel_times_array[i][x] > self.end_times[x]:
-                    self.dumas_before_sets[i].append(x)
-                    logging.debug(self.dumas_before_sets)
-                else:
-                    continue
-        return self.dumas_before_sets
     
-    def before_VRP(self):
-        Y = [self.dumas_before_sets[x] for x in self.new_last_point]
-        self.VRP_before_set = set(Y[0]).intersection(*Y)
-        return self.VRP_before_set
-
     def special_values(self):
+        self.dumas_before_sets = [[ ] for y in self.all_points_set]
         rows, cols = (range(len(self.distances_array)), range(len(self.distances_array)))
         self.LDT_array = np.array([[self.dumas_latest_departure_time(i,j) for i in rows] for j in cols])
+        logging.info(f"LDT array = {self.LDT_array}")
         self.before_sets = [self.dumas_before(i)[i] for i in self.all_points_set]
+        logging.info(f"before sets = {self.before_sets}")
         return
 
     def time_window_check(self):
@@ -215,16 +206,19 @@ class VRP_Problem:
         logging.info(f"time window test = {TW_test}")
         return TW_test
 
-
-    def dumas_first(self):
-        res1 = {k: v for k, v in self.memo.items() if k[0]==self.new_visited and k[1]==self.new_last_point}
-        res2 = {value: key for key, value in res1.items()}
-        if len(res2) == 0: 
-            self.first = self.new_time
-        else:
-            res3 = min(res2.keys(), key=lambda x: res2[x][2])
-            self.first = res2[res3][2]
-        return
+    def dumas_before(self, x):
+        for i in self.all_points_set:
+                if self.start_times[i]+self.service_times[i]+self.travel_times_array[i][x] > self.end_times[x]:
+                    self.dumas_before_sets[i].append(x)
+                    logging.debug(self.dumas_before_sets)
+                else:
+                    continue
+        return self.dumas_before_sets
+    
+    def before_VRP(self):
+        Y = [self.dumas_before_sets[x] for x in self.new_last_point]
+        self.VRP_before_set = set(Y[0]).intersection(*Y)
+        return self.VRP_before_set
 
     def dumas_test2(self):
         logging.debug(f"before({self.new_last_point})={self.before_sets[self.new_last_point]}")
@@ -248,11 +242,46 @@ class VRP_Problem:
             logging.info(f"({self.new_visited}, {self.new_last_point}, {self.new_time}) passes test 2")
         return test2
 
+    def dumas_first(self):
+        res1 = {k: v for k, v in self.memo.items() if k[0]==self.new_visited and k[1]==self.new_last_point}
+        res2 = {value: key for key, value in res1.items()}
+        if len(res2) == 0: 
+            self.first = self.new_time
+        else:
+            res3 = min(res2.keys(), key=lambda x: res2[x][2])
+            self.first = res2[res3][2]
+        return
+
+    def VRP_first(self):
+        res1 = {k: v for k, v in self.memo.items() if k[0]==self.new_visited and k[1]==self.new_last_point}
+        res2 = {value: key for key, value in res1.items()}
+        if len(res2) == 0:
+            for i in range(self.number_of_vehicles):
+                self.first[i] = self.new_time[i]
+        else:
+            for i in range(self.number_of_vehicles):
+                res3 = min(res2.keys(), key=lambda x: res2[x][2])
+                self.first[i] = res2[res3][2][i]
+        return
+
     def dumas_test1(self):
         
         if len(self.all_points_set.difference(self.new_visited)) == 0:
             test1 = True
         elif self.first > min(self.LDT_array[j][self.new_last_point] for j in self.all_points_set.difference(self.new_visited)): 
+            logging.debug(f"first = {self.first} > {min(self.LDT_array[j][self.new_last_point] for j in self.all_points_set.difference(self.new_visited))}")
+            logging.info(f"({self.new_visited}, {self.new_last_point}, {self.new_time}) fails test 1")
+            test1 = False
+        else:
+            logging.debug(f"first = {self.first} > {min(self.LDT_array[j][self.new_last_point] for j in self.all_points_set.difference(self.new_visited))}")
+            logging.info(f"({self.new_visited}, {self.new_last_point}, {self.new_time}) passes test 1")
+            test1 = True
+        return test1
+
+    def VRP_test1(self):
+        if len(self.all_points_set.difference(self.new_visited)) == 0:
+            test1 = True
+        elif self.first[i] > min(self.LDT_array[j][self.new_last_point] for i in range(self.number_of_vehicles) for j in self.all_points_set.difference(self.new_visited)): 
             logging.debug(f"first = {self.first} > {min(self.LDT_array[j][self.new_last_point] for j in self.all_points_set.difference(self.new_visited))}")
             logging.info(f"({self.new_visited}, {self.new_last_point}, {self.new_time}) fails test 1")
             test1 = False
@@ -407,8 +436,8 @@ class VRP_Problem:
                     logging.info(f"test 3 is not being used")
                
                 if T2:
-                    if not self.before_VRP():
-                        self.VRP_test2()
+                    if not self.dumas_before():
+                        self.dumas_test2()
                         logging.info(f"tests ended")
                         continue
                 else:
@@ -545,7 +574,9 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 a = VRP_Problem(number_of_vehicles = 3)
 #a.Solver(read_in_data = True, data = 'testinstances_v1.csv', random_data = False, instances = 8, timeframe = 2000, locationframe = 100, servicetime = False, serviceframe = None, T1 = True, T2 = True, T3 = True)
 a.read_in_data('testdata_VRP.csv', 2)
-logging.info(a.df)
+
+a.all_points_set = {x for x in range(a.number_of_jobs)}
+#print(a.all_points_set)
 #a.new_last_point = [2,9,3]
 #print(a.new_last_point)
 #a.dumas_before_sets = [[ ] for y in a.all_points_set]
@@ -569,20 +600,21 @@ logging.info(a.df)
 #print(a.VRP_before_set)
 #a.new_visited = [10, 13, 5, 11]
 #a.VRP_test2()
+T1 = True
+T2 = True
+a.special_values()
 a.queue = [(tuple([0]), tuple(a.prev_last_point), tuple(a.prev_time))]
-logging.debug(a.queue)
 a.memo [(tuple([0]), tuple(a.prev_last_point), tuple(a.prev_time))] = (tuple([a.prev_dist, a.prev_last_point, a.prev_time])) 
-logging.debug(a.memo)
 while a.queue: 
+    logging.debug(f"queue = {a.queue}")
     a.prev_visited, a.prev_last_point, a.prev_time = a.queue.pop(0)
-    a.prev_dist, _, _ = a.memo[(a.prev_visited, a.prev_last_point, a.prev_time)]
-    print(a.prev_visited)
-    print(a.prev_last_point)
-    print(a.prev_last_point[-1])
-    print(a.prev_time)
-    print(a.prev_dist)
+    a.prev_dist, _, _ = a.memo[(tuple(a.prev_visited), tuple(a.prev_last_point), tuple(a.prev_time))]
+    logging.debug(f"previously visited set = {a.prev_visited}")
+    logging.debug(f"previous last point = {a.prev_last_point}")
+    logging.debug(f"previous time = {a.prev_time}")
+    logging.debug(f"previous distance = {a.prev_dist}")
     to_visit = a.all_points_set.difference(set(a.prev_visited))
-    print(to_visit)
+    logging.debug(f"to visit set = {to_visit}")
     for i in range(a.number_of_vehicles):
         logging.info(f"for vehicle {i}")
         a.new_last_point[i-1] = a.prev_last_point[i-1]
@@ -594,10 +626,34 @@ while a.queue:
             a.new_dist[i] = a.prev_dist[i] + a.distances_array[a.prev_last_point[i]][a.new_last_point[i]]
             a.new_time[i] = max(a.prev_time[i], a.start_times[a.prev_last_point[i]]) + a.service_times[a.prev_last_point[i]] + a.travel_times_array[a.prev_last_point[i]][a.new_last_point[i]]
             logging.info(f"checking the new label ({a.new_visited},{a.new_last_point},{a.new_time}) with distances {a.new_dist}")
-            logging.info(f"start TW check")  
-            
-                            
-            
+            if not a.VRP_time_window_check():
+                continue
+            logging.info(f"tests started")
+            if T2:
+                a.before_VRP()
+                if not a.VRP_test2():
+                    logging.info(f"tests ended")
+                    continue
+                else:
+                    a.memo[(tuple(a.new_visited), tuple(a.new_last_point), tuple(a.new_time))] = (tuple(a.new_dist), tuple(a.prev_last_point), tuple(a.prev_time))
+                    a.queue.append([tuple(a.new_visited), tuple(a.new_last_point), tuple(a.new_time)])
+                    logging.debug(f"a.queue = {a.queue}")
+                    input()
+            else:
+                logging.info(f"test 2 is not being used")
+                
+            #a.VRP_first()
+            #if T1:                    
+                #if not a.VRP_test1():
+                    #logging.info(f"tests ended")
+                    #continue
+            #else:
+                #logging.info(f"test 1 is not being used")
+                    
+            logging.info(f"tests ended")
 
-            
-        
+            #self.dominance_test()
+
+
+                
+
