@@ -14,3 +14,8 @@ To do:
 1) I'm still getting errors when running the VRP first() and as a result I cannot check test 1
 2) I still need to update the dominance test (with data sorting)
 3) I need to figure out a way to not do duplicate extensions, i.e. if I have created the vehicle assignment (0,0,0) -> (1,0,0), I do not want to also do (0,0,0) -> (0,1,0).
+
+9/14/20:
+updates2:
+1) I worked on the dominance check.  I have it working for one pass, but then I get the error 'int not iterable'. I'm not sure what object it things is an integer ... requires more investigation.
+2) I think the VRP_first() operation now works, but I haven't had the opportunity to test it, yet.
