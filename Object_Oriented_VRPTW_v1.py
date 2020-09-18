@@ -1,4 +1,3 @@
-
 import csv
 import time
 import numpy as np
@@ -44,11 +43,13 @@ class VRP_Problem:
             self.new_last_point = [0 for i in range(self.number_of_vehicles)]
             self.new_time = [0 for i in range(self.number_of_vehicles)]
             self.new_dist = [0 for i in range(self.number_of_vehicles)]
-        self.first = None
+        #self.first = None
+        self.first = [0 for i in range(self.number_of_vehicles)]
         self.all_points_set = {}
         self.dumas_before_sets = []
         self.VRP_before_set = None
         self.TW = [False for i in range(self.number_of_vehicles)]
+        self.vehicle_order = [i for i in range(self.number_of_vehicles)]
 
     def read_in_data(self, data, travel_times_multiplier):
         x = []
@@ -604,15 +605,16 @@ T1 = True
 T2 = True
 a.special_values()
 a.queue = [(tuple([0]), tuple(a.prev_last_point), tuple(a.prev_time))]
-a.memo [(tuple([0]), tuple(a.prev_last_point), tuple(a.prev_time))] = (tuple([a.prev_dist, a.prev_last_point, a.prev_time])) 
+a.memo [tuple([0]), tuple(a.prev_last_point), tuple(a.prev_time)] = (tuple([a.prev_dist, a.prev_last_point, a.prev_time, a.vehicle_order])) 
 while a.queue: 
     logging.debug(f"queue = {a.queue}")
     a.prev_visited, a.prev_last_point, a.prev_time = a.queue.pop(0)
-    a.prev_dist, _, _ = a.memo[(tuple(a.prev_visited), tuple(a.prev_last_point), tuple(a.prev_time))]
+    a.prev_dist, _, _, a.vehicle_order = a.memo[(tuple(a.prev_visited), tuple(a.prev_last_point), tuple(a.prev_time))]
     logging.debug(f"previously visited set = {a.prev_visited}")
     logging.debug(f"previous last point = {a.prev_last_point}")
     logging.debug(f"previous time = {a.prev_time}")
     logging.debug(f"previous distance = {a.prev_dist}")
+    logging.debug(f"vehicle order = {a.vehicle_order}")
     to_visit = a.all_points_set.difference(set(a.prev_visited))
     logging.debug(f"to visit set = {to_visit}")
     for i in range(a.number_of_vehicles):
@@ -633,12 +635,7 @@ while a.queue:
                 a.before_VRP()
                 if not a.VRP_test2():
                     logging.info(f"tests ended")
-                    continue
-                else:
-                    a.memo[(tuple(a.new_visited), tuple(a.new_last_point), tuple(a.new_time))] = (tuple(a.new_dist), tuple(a.prev_last_point), tuple(a.prev_time))
-                    a.queue.append([tuple(a.new_visited), tuple(a.new_last_point), tuple(a.new_time)])
-                    logging.debug(f"a.queue = {a.queue}")
-                    input()
+                    continue           
             else:
                 logging.info(f"test 2 is not being used")
                 
@@ -651,9 +648,61 @@ while a.queue:
                 #logging.info(f"test 1 is not being used")
                     
             logging.info(f"tests ended")
-
-            #self.dominance_test()
-
-
+            a.VRP_first()
+            sorted_nlp, sorted_nt, sorted_nd, sorted_plp, sorted_pt, sorted_pd, sorted_vo = zip(*sorted(zip(a.new_last_point, a.new_time, a.new_dist, a.prev_last_point, a.prev_time, a.prev_dist, a.vehicle_order)))
+            logging.debug(f"vehicle order = {sorted_vo}")
+            sorted_first = [a.first[i] for i in sorted_vo]
+            logging.debug(f"first = {sorted_first}")
+            logging.info(f"starting dominance check:")
+            logging.debug(f"memo = {a.memo}")
+            logging.debug(f"queue = {a.queue}")
+            logging.debug(f"current label = {(a.new_visited, sorted_nlp, sorted_nt)} with distance {sorted_nd}")
+            if len({k: v for k, v in a.memo.items() if k[0]==a.new_visited and k[1]==sorted_nlp}) != 0: #possible dominated situation            
+                prev_lab_dist = a.memo[(a.new_visited, tuple(sorted_nlp), tuple(sorted_first))][0]
+                logging.debug(f"current label's distances = {prev_lab_dist}")
+                outcome1 = [(sorted_nt <= sorted_first) for sorted_nt, sorted_first in zip(sorted_nt, sorted_first)]
+                outcome2 = [(sorted_nd <= prev_lab_dist) for sorted_nd, prev_lab_dist in zip(sorted_nd, prev_lab_dist)]
+                outcome3 = [(sorted_nt < sorted_first) for sorted_nt, sorted_first in zip(sorted_nt, sorted_first)]
+                outcome4 = [(sorted_nd >= prev_lab_dist) for sorted_nd, prev_lab_dist in zip(sorted_nd, prev_lab_dist)]
+                outcome5 = [(sorted_nt >= sorted_first) for sorted_nt, sorted_first in zip(sorted_nt, sorted_first)]
+                outcome6 = [(sorted_nd < prev_lab_dist) for sorted_nd, prev_lab_dist in zip(sorted_nd, prev_lab_dist)]
+                if all(outcome1) and all(outcome2): #time and cost improvement, replace label
+                    del a.memo[(tuple(a.new_visited), tuple(sorted_nlp), tuple(sorted_first))]
+                    a.memo[(tuple(a.new_visited), tuple(sorted_nlp), tuple(sorted_nt))] = (sorted_nd, sorted_plp, sorted_pt, sorted_vo)
+                    a.queue.remove((tuple(a.new_visited), tuple(sorted_nlp), tuple(sorted_first)))
+                    a.queue.append((tuple(a.new_visited), tuple(sorted_nlp), tuple(sorted_nt)))
+                    logging.info(f"label ({a.new_visited}, {sorted_nlp}, {sorted_nt}) dominated, case 1, replaces label ({a.new_visited},{a.new_last_point},{sorted_first})")
+                    input()
                 
-
+                #outcome1 = [(sorted_nt == a.frst) for sorted_nt, a.first in zip(sorted_nt, a.first)]
+                #outcome2 = [(sorted_nd == a.memo[(a.new_visited, tuple(sorted_nlp), tuple(a.first))][0]) for sorted_nt, a.memo[(a.new_visited, tuple(sorted_nlp), tuple(a.first))][0] in zip(sorted_nt, a.memo[(a.new_visited, tuple(sorted_nlp), tuple(a.first))][0])]
+                #if all(outcome1) and all(outcome2): #same time, cost improvement, replace old label with new
+                    #a.memo[(a.new_visited, sorted_nlp, a.first)] = (sorted_nd, sorted_plp, sorted_pt)
+                    #a.queue.append([(a.new_visited, sorted_nlp, sorted_nt)])
+                    #logging.info(f"label ({a.new_visited}, {sorted_nlp}, {sorted_nt}) dominated, case 2, same time, better distance, updates old label with new distance")            
+                    #input()
+                #else:
+                    #continue
+                
+                elif all(outcome3) and all(outcome4): #time improvement only, add new label
+                    a.memo[(tuple(a.new_visited), tuple(sorted_nlp), tuple(sorted_nt))] = (sorted_nd, sorted_plp, sorted_pt)
+                    a.queue.append((tuple(a.new_visited), tuple(sorted_nlp), tuple(sorted_nt)))
+                    logging.info(f"label ({a.new_visited}, {sorted_nlp}, {sorted_nt}) dominated, case 3, better time, worse cost, adds label")
+                    input()
+                                
+                elif all(outcome5) and all(outcome6): #cost improvement only, add new label
+                    a.memo[(a.new_visited, sorted_nlp, sorted_nt)] = (sorted_nd, sorted_plp, sorted_pt)
+                    a.queue.append((a.new_visited, sorted_nlp, sorted_new_time))
+                    logging.info(f"label ({a.new_visited}, {sorted_nlp}, {sorted_nt}) dominated, case 4, slower time, better cost, adds label")
+                    input()
+                else:
+                    logging.info(f"label ({a.new_visited}, {sorted_nlp}, {sorted_nt}) dominated, case 5, no label created")
+                    input()                 
+            else: 
+                a.memo[(tuple(a.new_visited), tuple(sorted_nlp), tuple(sorted_nt))] = (tuple(sorted_nd), tuple(sorted_plp), tuple(sorted_pt), tuple(sorted_vo))
+                a.queue.append((tuple(a.new_visited), tuple(sorted_nlp), tuple(sorted_nt)))
+                logging.info(f"no (S,V_i) label exists, {a.new_visited, sorted_nlp, sorted_nt} added") 
+                input()
+            logging.debug(f"the queue is {a.queue}")
+            logging.debug(f"the memo is {a.memo}")
+        
