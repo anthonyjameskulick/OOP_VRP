@@ -302,12 +302,12 @@ class VRP_Problem:
             logging.debug(f"test1 = {test1}")
         else:
             if not check:
-                logging.debug(f"first = {self.first} > {min(self.LDT_array[j][self.new_last_point] for j in self.all_points_set.difference(self.new_visited))}")
+                #logging.debug(f"first = {self.first} > {min(self.LDT_array[j][self.new_last_point] for j in self.all_points_set.difference(self.new_visited))}")
                 logging.info(f"({self.new_visited}, {self.new_last_point}, {self.new_time}) fails test 1")
                 test1 = False
                 logging.debug(f"test1 = {test1}")
             else:
-                logging.debug(f"first = {self.first} <= {min(self.LDT_array[j][self.new_last_point] for j in self.all_points_set.difference(self.new_visited))}")
+                #logging.debug(f"first = {self.first} <= {min(self.LDT_array[j][self.new_last_point] for j in self.all_points_set.difference(self.new_visited))}")
                 logging.info(f"({self.new_visited}, {self.new_last_point}, {self.new_time}) passes test 1")
                 test1 = True
                 logging.debug(f"test1 = {test1}")
@@ -675,15 +675,15 @@ while a.queue:
             if T2:
                 #a.before_VRP()
                 if not a.VRP_test2():
-                    logging.info(f"tests ended")
+                    logging.debug(f"tests ended, label rejected")
                     continue           
             else:
                 logging.info(f"test 2 is not being used")
                 
             if T1:                    
                 if not a.VRP_test1():
-                    logging.info(f"tests ended")
-                    continue
+                    logging.debug(f"tests ended, label rejected")
+
             else:
                 logging.info(f"test 1 is not being used")
                     
@@ -691,4 +691,3 @@ while a.queue:
             a.VRP_dominance_test()
 logging.debug(f"queue = {a.queue}")
 logging.debug(f"memo = {a.memo}")
-
