@@ -406,7 +406,7 @@ class VRP_Problem:
             optimal_path=None, 
             self.df1=None
         elif len(full_path_memo) !=0:
-            path_key = min(full_path_memo.keys(), key=lambda x: full_path_memo[x][0]) #is this giving the minimum sum of distances or is giving the minimum distance from a lexicographic perspective?
+            path_key = min(full_path_memo.keys(), key=lambda x: sum(full_path_memo[x][0])) #is this giving the minimum sum of distances or is giving the minimum distance from a lexicographic perspective?
             logging.debug(f"path key = {path_key}")
             last_point = path_key[1]
             logging.debug(f"last point = {last_point}")
