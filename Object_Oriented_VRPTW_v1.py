@@ -128,13 +128,14 @@ class VRP_Problem:
             self.distances_array = np.round(self.distances_array, 2)
             self.travel_times_array = np.round(self.distances_array, 2)
             self.all_points_set = set(range(self.number_of_jobs))
-            testdata = pd.DataFrame({'name' : name, 'xcoord' : x, 'ycoord' : y, 'start' : start, 'end' : end, 'service' : service_time})
+            testdata = pd.DataFrame({'name' : name, 'xcoord' : x, 'ycoord' : y, 'start' : self.start_times, 'end' : self.end_times, 'service' : self.service_times})
             testdata.to_csv('testinstances.csv', sep='\t',index=False)
-            self.df = pd.DataFrame({'xcoord' : x, 'ycoord' : y, 'start time' : start, 'end time' : end, 'service time' : service_time})
+            self.df = pd.DataFrame({'xcoord' : x, 'ycoord' : y, 'start time' : self.start_times, 'end time' : self.end_times, 'service time' : self.service_times})
 
         return 
 
     def reset_problem(self):
+        self.number_of_vehicles = number_of_vehicles
         self.number_of_jobs = None
         self.job_locations = []
         self.start_times = []
@@ -154,23 +155,34 @@ class VRP_Problem:
         self.df = None
         self.df1 = None
         self.prev_visited = []
-        self.prev_last_point = None
-        self.prev_time = None
-        self.prev_dist = None
         self.new_visited = []
-        self.new_last_point = None
-        self.new_time = None
-        self.new_dist = None
-        self.first = None
-        self.sorted_nlp = tuple([0 for i in self.number_of_vehicles])
-        self.sorted_nt = tuple([0 for i in self.number_of_jobs])
+        if number_of_vehicles == 1:
+            self.prev_last_point = None
+            self.prev_time = 0
+            self.prev_dist = 0
+            self.new_last_point = None
+            self.new_time = None
+            self.new_dist = None
+        else:
+            self.prev_last_point = [0 for i in range(self.number_of_vehicles)] #0 is the depot location
+            self.prev_time = [0 for i in range(self.number_of_vehicles)]
+            self.prev_dist = [0 for i in range(self.number_of_vehicles)]
+            self.new_last_point = [0 for i in range(self.number_of_vehicles)]
+            self.new_time = [0 for i in range(self.number_of_vehicles)]
+            self.new_dist = [0 for i in range(self.number_of_vehicles)]
+        #self.first = None
+        self.first = [0 for i in range(self.number_of_vehicles)]
+        self.all_points_set = {}
+        self.dumas_before_sets = []
+        self.VRP_before_set = None
+        self.TW = [False for i in range(self.number_of_vehicles)]
+        self.vehicle_order = [i for i in range(self.number_of_vehicles)]
         return
 
     def dumas_latest_departure_time(self, x, y):
         ldt = self.end_times[y]-self.service_times[y]-self.travel_times_array[x][y]-self.service_times[x]
         return ldt
 
-    
     def special_values(self):
         self.dumas_before_sets = [[ ] for y in self.all_points_set]
         rows, cols = (range(len(self.distances_array)), range(len(self.distances_array)))
@@ -736,8 +748,8 @@ class VRP_Problem:
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 a = VRP_Problem(number_of_vehicles = 3)
 #a.Solver(read_in_data = True, data = 'testdata_VRP.csv', random_data = False, instances = None , timeframe = None, locationframe = None, servicetime = False, serviceframe = None, T1 = True, T2 = True, T3 = False)
-a.read_in_data('testdata_VRP.csv', 2)
-a.VRP_Solve(T1=True, T2=True)
-a.retrace_optimal_path_VRP(a.memo, a.number_of_jobs )
-
-
+#a.read_in_data('testdata_VRP.csv', 2)
+#a.VRP_Solve(T1=True, T2=True)
+#a.retrace_optimal_path_VRP(a.memo, a.number_of_jobs )
+a.random_data_generator(instances = 10, timeframe = 2000, locationframe = 100, servicetime = True, serviceframe = 10, travel_times_multiplier = 2)
+logging.debug(f"{a.df}")
