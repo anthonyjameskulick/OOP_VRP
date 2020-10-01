@@ -30,7 +30,7 @@ class VRP_Problem:
         self.df1 = None
         self.prev_visited = []
         self.new_visited = []
-        if number_of_vehicles == 1:
+        if self.number_of_vehicles == 1:
             self.prev_last_point = None
             self.prev_time = 0
             self.prev_dist = 0
@@ -73,7 +73,7 @@ class VRP_Problem:
         self.df = pd.DataFrame({'xcoord' : x, 'ycoord' : y, 'start time' : self.start_times, 'end time' : self.end_times, 'service time' : self.service_times})
         logging.info(a.df)
         return
-#random genrator still throwing errors, trying to add a depot creation feature
+
     def random_data_generator(self, instances, timeframe, locationframe, servicetime, serviceframe, travel_times_multiplier):
         if self.number_of_vehicles == 1:
             self.number_of_jobs = instances
@@ -135,7 +135,6 @@ class VRP_Problem:
         return 
 
     def reset_problem(self):
-        self.number_of_vehicles = number_of_vehicles
         self.number_of_jobs = None
         self.job_locations = []
         self.start_times = []
@@ -156,7 +155,7 @@ class VRP_Problem:
         self.df1 = None
         self.prev_visited = []
         self.new_visited = []
-        if number_of_vehicles == 1:
+        if self.number_of_vehicles == 1:
             self.prev_last_point = None
             self.prev_time = 0
             self.prev_dist = 0
@@ -404,33 +403,74 @@ class VRP_Problem:
             start1 = [self.start_times[i] for i in optimal_path]
             end1 = [self.end_times[i] for i in optimal_path]
             optimal_path_departure_times = [max(optimal_path_arrival_times[i]+self.service_times[i], start1[i]) for i in range(len(self.distances_array))]
-            #self.optimal_path = optimal_path
-            #self.optimal_cost = optimal_path
+            self.optimal_path = optimal_path
+            self.optimal_cost = optimal_cost
             self.df1 = pd.DataFrame({'opt path': optimal_path, 'start': start1, 'arrival': optimal_path_arrival_times, 'departure': optimal_path_departure_times, 'end': end1 })
+            print("time check:")
+            print(self.df1)
         return optimal_path, optimal_cost
 
     def retrace_optimal_path_VRP(self, memo: dict, n: int) -> [[int], float]:
         points_to_retrace = tuple(range(self.number_of_jobs))    
         full_path_memo = dict((k, v) for k, v in self.memo.items() if k[0] == points_to_retrace)
         logging.debug(full_path_memo)
+        for x in full_path_memo:
+            logging.debug(f"x = {x}")
+            current_cost_vector = list(full_path_memo[x][0])
+            logging.debug(f"current cost vector = {current_cost_vector}")
+            for j in range(self.number_of_vehicles):
+                logging.debug(f"j = {j}")
+                logging.debug(f"current vehicle locations = {x[1]}")
+                logging.debug(f"current cost vector = {full_path_memo[x][0]}")
+                logging.debug(f"current location for vehicle {j} = {x[1][j]}")
+                current_cost_vector[j] = full_path_memo.get(x)[0][j]+self.distances_array[x[1][j]][0]
+                logging.debug(f"updated distances = {current_cost_vector}")
+                full_path_memo[x] = (tuple(current_cost_vector), full_path_memo.get(x)[1], full_path_memo.get(x)[2], full_path_memo.get(x)[3])
+                logging.debug(f"full path memo[{x}] = {full_path_memo[x]}")
+        logging.debug(f"full path memo = {full_path_memo}")     
+
         if len(full_path_memo) == 0: 
             optimal_cost=None, 
             optimal_path=None, 
             self.df1=None
         elif len(full_path_memo) !=0:
-            path_key = min(full_path_memo.keys(), key=lambda x: sum(full_path_memo[x][0])) #is this giving the minimum sum of distances or is giving the minimum distance from a lexicographic perspective?
+            path_key = min(full_path_memo.keys(), key=lambda x: sum(full_path_memo[x][0])) 
             logging.debug(f"path key = {path_key}")
             last_point = path_key[1]
             logging.debug(f"last point = {last_point}")
-            optimal_cost, prev_last_point, prev_last_time, vehicle_order = self.memo.get(path_key)
+            optimal_cost, prev_last_point, prev_last_time, vehicle_order = full_path_memo.get(path_key)
             logging.debug(f"optimal cost = {optimal_cost}")
+            input()
+            #wrong optimal cost?
             logging.debug(f"prev last point = {prev_last_point}")
             logging.debug(f"prev last time = {prev_last_time}")
             logging.debug(f"vehicle order = {vehicle_order}")
-            optimal_path_arrival_times = [[path_key[2][i]] for i in vehicle_order]
+            current_time_vector = list(path_key[2])
+            logging.debug(f"current time vector = {current_time_vector}")
+            for i in range(self.number_of_vehicles):
+                current_time_vector[i] = path_key[2][i] + self.travel_times_array[last_point[i]][0]
+                logging.debug(f"current time vector = {current_time_vector}")
+            optimal_path_arrival_times = [[current_time_vector[i]] for i in vehicle_order]
             logging.debug(f"optimal path arrival times = {optimal_path_arrival_times}")
-            optimal_path = [[last_point[i]] for i in vehicle_order]
+            for i in vehicle_order:
+                logging.debug(f"path key times = {path_key[2]}")
+                logging.debug(f"time to add = {path_key[2][i]}")
+                if path_key[2][i] == 0:
+                    logging.debug(f"optimal path arrival times = {optimal_path_arrival_times}")
+                    continue
+                else:
+                    optimal_path_arrival_times[i] = [path_key[2][i]] + optimal_path_arrival_times[i]
+                    logging.debug(f"optimal path arrival times = {optimal_path_arrival_times}")
+            input()
+            optimal_path = [[0] for i in range(self.number_of_vehicles)]
             logging.debug(f"optimal path = {optimal_path}")
+            for i in vehicle_order:
+                if last_point[i] == 0:
+                    continue
+                else:
+                    optimal_path[i] = [last_point[i]] + optimal_path[i]
+                    logging.debug(f"optimal path = {optimal_path}")
+            input()
             _,temp_prev_last_point = zip(*sorted(zip(vehicle_order, prev_last_point)))
             logging.debug(f"temp prev last point = {temp_prev_last_point}")
             point_to_remove_test = [(last_point == temp_prev_last_point) for last_point, temp_prev_last_point in zip(last_point, temp_prev_last_point)]
@@ -441,7 +481,7 @@ class VRP_Problem:
             logging.debug(f"point to remove = {point_to_remove}")
             points_to_retrace = tuple(sorted(set(points_to_retrace).difference({point_to_remove})))
             logging.debug(f"points to retrace = {points_to_retrace}")
-            input()
+            
             
             while len(points_to_retrace) !=0:
                 last_point = prev_last_point
@@ -489,7 +529,7 @@ class VRP_Problem:
                 _,prev_last_point,prev_last_time,_ = self.memo.get(path_key)
                 logging.debug(f"prev last point = {prev_last_point}")
                 logging.debug(f"prev last time = {prev_last_time}")
-                input()
+                
                
                 
             start1 = [[] for i in range(self.number_of_vehicles)]
@@ -504,18 +544,21 @@ class VRP_Problem:
             logging.debug(f"optimal path arrival times = {optimal_path_arrival_times}")
             logging.debug(f"service times = {self.service_times}")
             logging.debug(f"start 1 = {start1}")
-            input()
+           
             optimal_path_departure_times = [[] for i in range(self.number_of_vehicles)]
             for i in range(self.number_of_vehicles):
                 for j in range(len(optimal_path[i])):
                     optimal_path_departure_times[i] = [max(optimal_path_arrival_times[i][j]+self.service_times[optimal_path[i][j]], start1[i][j])] + optimal_path_departure_times[i]
             logging.debug(f"optimal path departure times = {optimal_path_departure_times}")
-            input()
+            
+            self.optimal_cost = optimal_cost
+            self.optimal_path = optimal_path
+            print("time check:")
             for i in range(self.number_of_vehicles):
                 self.df1 = pd.DataFrame({'opt path[i]': optimal_path[i], 'start[i]': start1[i], 'arrival': optimal_path_arrival_times[i], 'departure[i]': optimal_path_departure_times[i], 'end[i]': end1[i] })
                 logging.debug(f"{self.df1}")
-                input()
-
+            
+            
         return self.optimal_path, self.optimal_cost
 
     def dominance_test(self):
@@ -702,19 +745,19 @@ class VRP_Problem:
                 
 
         #end while
-        #self.optimal_path, self.optimal_cost = self.retrace_optimal_path_TSPTW(self.memo, self.number_of_jobs)
+        self.optimal_path, self.optimal_cost = self.retrace_optimal_path_VRP(self.memo, self.number_of_jobs)
     
-        return #self.optimal_path, self.optimal_cost, self.df1
+        return self.optimal_path, self.optimal_cost, self.df1
 
-    def Solver(self, read_in_data, data, random_data, instances, timeframe, locationframe, servicetime, serviceframe, T1, T2, T3):
+    def Solver(self, read_in_data, data, random_data, instances, timeframe, locationframe, servicetime, serviceframe, travel_times_multiplier, T1, T2, T3):
         self.reset_problem()
         if read_in_data == True:
-            self.read_in_data(data, 1)
-            logging.info(f" the problem is {self.df}")
+            self.read_in_data(data, travel_times_multiplier)
+            print(self.df)
         else:
             logging.debug('no read in data given')
         if random_data == True:
-            self.random_data_generator(instances, timeframe, locationframe, servicetime, serviceframe, 1)
+            self.random_data_generator(instances, timeframe, locationframe, servicetime, serviceframe, travel_times_multiplier)
             print(self.df)
         else:
             logging.debug('no random data generated')
@@ -723,33 +766,26 @@ class VRP_Problem:
             self.t = time.time()
             self.Dumas_TSPTW_Solve(T1, T2, T3)
             self.run_time = round(time.time() - self.t, 3)
-            logging.debug(self.before_sets)
-            logging.debug(self.LDT_array)
         else:
             logging.debug(f"VRP situation")
             self.t = time.time()
             self.VRP_Solve(T1, T2)
-            self.retrace_optimal_path_VRP(self.memo, self.number_of_jobs )
+            #self.retrace_optimal_path_VRP(self.memo, self.number_of_jobs )
             self.run_time = round(time.time() - self.t, 3)
-            logging.debug(self.before_sets)
-            logging.debug(self.LDT_array)
         print("the memo length is:")
         print(len(self.memo))
         print("the length of the test 3 rejected labels is:")
         print(f"Found optimal path in {self.run_time} seconds.") 
         print(f"Optimal cost: {self.optimal_cost}, optimal path: {self.optimal_path}")
-        print("Time check:")
-        for i in range(self.number_of_vehicles):
-                self.df1 = pd.DataFrame({'opt path[i]': optimal_path[i], 'start[i]': start1[i], 'arrival': optimal_path_arrival_times[i], 'departure[i]': optimal_path_departure_times[i], 'end[i]': end1[i] })
-                logging.debug(f"{self.df1}")
         return
 
     
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 a = VRP_Problem(number_of_vehicles = 3)
-#a.Solver(read_in_data = True, data = 'testdata_VRP.csv', random_data = False, instances = None , timeframe = None, locationframe = None, servicetime = False, serviceframe = None, T1 = True, T2 = True, T3 = False)
+a.Solver(read_in_data = True, data = 'testdata_VRP.csv', random_data = False, instances = None , timeframe = None, locationframe = None, servicetime = False, serviceframe = None, travel_times_multiplier = 2, T1 = True, T2 = True, T3 = False)
 #a.read_in_data('testdata_VRP.csv', 2)
 #a.VRP_Solve(T1=True, T2=True)
 #a.retrace_optimal_path_VRP(a.memo, a.number_of_jobs )
-a.random_data_generator(instances = 10, timeframe = 2000, locationframe = 100, servicetime = True, serviceframe = 10, travel_times_multiplier = 2)
-logging.debug(f"{a.df}")
+#a.random_data_generator(instances = 10, timeframe = 2000, locationframe = 100, servicetime = True, serviceframe = 10, travel_times_multiplier = 2)
+#logging.debug(f"{a.df}")
+    
