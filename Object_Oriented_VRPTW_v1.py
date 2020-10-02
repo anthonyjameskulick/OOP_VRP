@@ -74,7 +74,7 @@ class VRP_Problem:
         logging.info(a.df)
         return
 
-    def random_data_generator(self, instances, timeframe, locationframe, servicetime, serviceframe, travel_times_multiplier):
+    def random_data_generator(self, instances, timeframe, locationframe, servicetime, serviceframe, travel_times_multiplier, save_name):
         if self.number_of_vehicles == 1:
             self.number_of_jobs = instances
             name = range(0,instances)
@@ -112,10 +112,12 @@ class VRP_Problem:
             for i in name: self.job_locations.append((x[i],y[i]))
             self.job_locations = np.array(self.job_locations)
             time0 = range(0,timeframe)
-            start = [0] + random.choices(time0, weights=None, k=instances-1)
+            start = random.choices(time0, weights=None, k=instances-1)
+            end=[]
+            for i in range(len(start)): end.append(random.randrange(start[i]+25,timeframe+25))
+            start = [0] + start
+            end = [timeframe] + end
             for i in name: self.start_times.append(start[i])
-            end=[timeframe]
-            for i in name: end.append(random.randrange(start[i]+25,timeframe+25))
             for i in name: self.end_times.append(end[i])
             if servicetime == True:
                 service_time = [0] + random.choices(range(0,serviceframe), weights=None, k=instances)
@@ -129,7 +131,7 @@ class VRP_Problem:
             self.travel_times_array = np.round(self.distances_array, 2)
             self.all_points_set = set(range(self.number_of_jobs))
             testdata = pd.DataFrame({'name' : name, 'xcoord' : x, 'ycoord' : y, 'start' : self.start_times, 'end' : self.end_times, 'service' : self.service_times})
-            testdata.to_csv('testinstances.csv', sep='\t',index=False)
+            testdata.to_csv(save_name, sep='\t',index=False)
             self.df = pd.DataFrame({'xcoord' : x, 'ycoord' : y, 'start time' : self.start_times, 'end time' : self.end_times, 'service time' : self.service_times})
 
         return 
@@ -612,13 +614,13 @@ class VRP_Problem:
                 logging.info(f"label ({self.new_visited}, {sorted_nlp}, {sorted_nt}) dominated, case 1, replaces label ({self.new_visited},{self.new_last_point},{sorted_first})")
                 #input()
             elif all(outcome3) and all(outcome4): #time improvement only, add new label
-                self.memo[(tuple(self.new_visited), tuple(sorted_nlp), tuple(sorted_nt))] = (sorted_nd, sorted_plp, sorted_pt)
+                self.memo[(tuple(self.new_visited), tuple(sorted_nlp), tuple(sorted_nt))] = (sorted_nd, sorted_plp, sorted_pt, sorted_vo)
                 self.queue.append((tuple(self.new_visited), tuple(sorted_nlp), tuple(sorted_nt)))
                 logging.info(f"label ({self.new_visited}, {sorted_nlp}, {sorted_nt}) dominated, case 3, better time, worse cost, adds label")
                 #input()
                                 
             elif all(outcome5) and all(outcome6): #cost improvement only, add new label
-                self.memo[(self.new_visited, self.sorted_nlp, a.sorted_nt)] = (sorted_nd, sorted_plp, sorted_pt)
+                self.memo[(self.new_visited, sorted_nlp, sorted_nt)] = (sorted_nd, sorted_plp, sorted_pt, sorted_vo)
                 self.queue.append((self.new_visited, sorted_nlp, sorted_nt))
                 logging.info(f"label ({self.new_visited}, {sorted_nlp}, {sorted_nt}) dominated, case 4, slower time, better cost, adds label")
                 #input()
@@ -745,7 +747,7 @@ class VRP_Problem:
     
         return self.optimal_path, self.optimal_cost, self.df1
 
-    def Solver(self, read_in_data, data, random_data, instances, timeframe, locationframe, servicetime, serviceframe, travel_times_multiplier, T1, T2, T3):
+    def Solver(self, read_in_data, data, random_data, instances, timeframe, locationframe, servicetime, serviceframe, travel_times_multiplier, save_name, T1, T2, T3):
         self.reset_problem()
         if read_in_data == True:
             self.read_in_data(data, travel_times_multiplier)
@@ -753,7 +755,7 @@ class VRP_Problem:
         else:
             logging.debug('no read in data given')
         if random_data == True:
-            self.random_data_generator(instances, timeframe, locationframe, servicetime, serviceframe, travel_times_multiplier)
+            self.random_data_generator(instances, timeframe, locationframe, servicetime, serviceframe, travel_times_multiplier, save_name)
             print(self.df)
         else:
             logging.debug('no random data generated')
@@ -776,12 +778,12 @@ class VRP_Problem:
         return
 
     
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
-a = VRP_Problem(number_of_vehicles = 3)
-a.Solver(read_in_data = True, data = 'testdata_VRP.csv', random_data = False, instances = None , timeframe = None, locationframe = None, servicetime = False, serviceframe = None, travel_times_multiplier = 2, T1 = True, T2 = True, T3 = False)
+#logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+a = VRP_Problem(number_of_vehicles = 2)
+a.Solver(read_in_data = False, data = 'VRP_testing_1.csv', random_data = True, instances = 10, timeframe = 2000, locationframe = 100, servicetime = True, serviceframe = 25, travel_times_multiplier = 2, save_name = 'VRP_testing_1.csv', T1 = True, T2 = True, T3 = False)
 #a.read_in_data('testdata_VRP.csv', 2)
 #a.VRP_Solve(T1=True, T2=True)
 #a.retrace_optimal_path_VRP(a.memo, a.number_of_jobs )
-#a.random_data_generator(instances = 10, timeframe = 2000, locationframe = 100, servicetime = True, serviceframe = 10, travel_times_multiplier = 2)
+#a.random_data_generator(instances = 10, timeframe = 2000, locationframe = 100, servicetime = True, serviceframe = 10, travel_times_multiplier = 2, save_name = 'TEST.csv')
 #logging.debug(f"{a.df}")
     
