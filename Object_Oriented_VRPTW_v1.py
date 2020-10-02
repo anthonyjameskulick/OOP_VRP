@@ -440,8 +440,6 @@ class VRP_Problem:
             logging.debug(f"last point = {last_point}")
             optimal_cost, prev_last_point, prev_last_time, vehicle_order = full_path_memo.get(path_key)
             logging.debug(f"optimal cost = {optimal_cost}")
-            input()
-            #wrong optimal cost?
             logging.debug(f"prev last point = {prev_last_point}")
             logging.debug(f"prev last time = {prev_last_time}")
             logging.debug(f"vehicle order = {vehicle_order}")
@@ -461,7 +459,6 @@ class VRP_Problem:
                 else:
                     optimal_path_arrival_times[i] = [path_key[2][i]] + optimal_path_arrival_times[i]
                     logging.debug(f"optimal path arrival times = {optimal_path_arrival_times}")
-            input()
             optimal_path = [[0] for i in range(self.number_of_vehicles)]
             logging.debug(f"optimal path = {optimal_path}")
             for i in vehicle_order:
@@ -470,7 +467,6 @@ class VRP_Problem:
                 else:
                     optimal_path[i] = [last_point[i]] + optimal_path[i]
                     logging.debug(f"optimal path = {optimal_path}")
-            input()
             _,temp_prev_last_point = zip(*sorted(zip(vehicle_order, prev_last_point)))
             logging.debug(f"temp prev last point = {temp_prev_last_point}")
             point_to_remove_test = [(last_point == temp_prev_last_point) for last_point, temp_prev_last_point in zip(last_point, temp_prev_last_point)]
@@ -548,7 +544,7 @@ class VRP_Problem:
             optimal_path_departure_times = [[] for i in range(self.number_of_vehicles)]
             for i in range(self.number_of_vehicles):
                 for j in range(len(optimal_path[i])):
-                    optimal_path_departure_times[i] = [max(optimal_path_arrival_times[i][j]+self.service_times[optimal_path[i][j]], start1[i][j])] + optimal_path_departure_times[i]
+                    optimal_path_departure_times[i] = optimal_path_departure_times[i] + [max(optimal_path_arrival_times[i][j]+self.service_times[optimal_path[i][j]], start1[i][j])]
             logging.debug(f"optimal path departure times = {optimal_path_departure_times}")
             
             self.optimal_cost = optimal_cost
