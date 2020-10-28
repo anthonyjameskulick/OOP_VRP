@@ -339,6 +339,8 @@ class VRP_Problem:
                         logging.debug(f"first = {first1[vehicle_to_check]} <= LDT({j},{self.new_last_point[vehicle_to_check]}) = {self.LDT_array[j][self.new_last_point[vehicle_to_check]]}")
                         unreachable_points = unreachable_points.difference({j})
                         logging.debug(f"unreachable points are now = {unreachable_points}")
+                    else:
+                        logging.debug(f"first = {first1[vehicle_to_check]} > LDT({j},{self.new_last_point[vehicle_to_check]}) = {self.LDT_array[j][self.new_last_point[vehicle_to_check]]}")
                 logging.debug(f"length of unreachable points = {len(unreachable_points)}")
                 logging.debug(f"length of vehicles to check = {len(vehicles_to_check)}")
          
@@ -672,8 +674,8 @@ class VRP_Problem:
     def VRP_dominance_test_update(self):
         logging.info(f"starting dominance check:")
         sorted_nlp, sorted_nt, sorted_nd, sorted_vo = zip(*sorted(zip(self.new_last_point, self.new_time, self.new_dist, self.vehicle_order)))
-        dom_lab = {k: v for k, v in self.memo.items() if k[0]==self.new_visited and k[1]==sorted_nlp}
-        #dom_lab = self.label_check
+        #dom_lab = {k: v for k, v in self.memo.items() if k[0]==self.new_visited and k[1]==sorted_nlp}
+        dom_lab = self.label_check
         logging.debug(f"possible dominated labels = {dom_lab}")
         if len(dom_lab) != 0: #possible dominated situation            
             dom_lab_keys = [key for key in dom_lab.keys()]
@@ -727,16 +729,18 @@ class VRP_Problem:
     #this checks to see if the exact same label is already in the memo, if so, the current label is abandoned otherwise the other checks proceed
     def duplicate_label_check_VRP(self):
         sorted_nlp, sorted_nt, sorted_nd, sorted_vo = zip(*sorted(zip(self.new_last_point, self.new_time, self.new_dist, self.vehicle_order)))
-        logging.info(f"starting duplicate label check for label ({self.new_visited}, {sorted_nlp}, {sorted_nt}) with values ({sorted_nd}, {self.prev_last_point}, {self.prev_time}, _):")
+        dup_label_check = {k: v for k, v in self.label_check.items() if k[0]==self.new_visited and k[1]==sorted_nlp and k[2]==sorted_nt}
+        logging.info(f"starting duplicate label check for label ({dup_label_check}, {sorted_nlp}, {sorted_nt}) with values ({sorted_nd}, {self.prev_last_point}, {self.prev_time}, _):")
         
-        if len(self.label_check) == 0:
+        if len(dup_label_check) == 0:
             dup_lab_check = True
             logging.info(f"the label ({self.new_visited}, {sorted_nlp}, {sorted_nt}) IS NOT a duplicate label")
         else:
-            test_sorted_nd, test_prev_last_point, test_prev_time, _ = self.memo.get((self.new_visited, sorted_nlp, sorted_nt)) #do I need all of these for a duplicate label ... would just the same distance be enough?
+            #test_sorted_nd, test_prev_last_point, test_prev_time, _ = self.memo.get((self.new_visited, sorted_nlp, sorted_nt)) #do I need all of these for a duplicate label ... would just the same distance be enough?
+            test_sorted_nd, _, _, _ = dup_label_check.get((self.new_visited, sorted_nlp, sorted_nt))
             logging.debug(f"test sorted new distance = {test_sorted_nd} and sorted new distance = {sorted_nd}")
-            logging.debug(f"test prev last point = {test_prev_last_point} and prev last point = {self.prev_last_point}")
-            logging.debug(f"test prev time = {test_prev_time} and prev time = {self.prev_time}")
+            #logging.debug(f"test prev last point = {test_prev_last_point} and prev last point = {self.prev_last_point}")
+            #logging.debug(f"test prev time = {test_prev_time} and prev time = {self.prev_time}")
             if test_sorted_nd == sorted_nd: #and test_prev_last_point == self.prev_last_point and test_prev_time == self.prev_time:
                 dup_lab_check = False
                 logging.info(f"the label ({self.new_visited}, {sorted_nlp}, {sorted_nt}) IS a duplicate label")
@@ -836,10 +840,10 @@ class VRP_Problem:
                     logging.info(f"checking the new label ({self.new_visited},{self.new_last_point},{self.new_time}) with distances {self.new_dist}")
                     self.label_check = {}
                     sorted_nlp, sorted_nt, sorted_nd, sorted_vo = zip(*sorted(zip(self.new_last_point, self.new_time, self.new_dist, self.vehicle_order)))
-                    self.label_check = {k: v for k, v in self.memo.items() if k[0]==self.new_visited and k[1]==sorted_nlp and k[2]==sorted_nt}
+                    self.label_check = {k: v for k, v in self.memo.items() if k[0]==self.new_visited and k[1]==sorted_nlp}
                     if not self.duplicate_label_check_VRP():
                         continue
-                    #
+                    
                     #input()
                     if not self.VRP_time_window_check():
                         continue
@@ -906,7 +910,7 @@ class VRP_Problem:
         return
 
     
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
+#logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 a = VRP_Problem(number_of_vehicles = 2)
 a.Solver(read_in_data = True, data = 'VRP_testing_1.csv', random_data = False, instances = 6, timeframe = 450, locationframe = 100, servicetime = True, serviceframe = 25, travel_times_multiplier = 1, save_name = 'VRP_small_test_v2.csv', T1 = True, T2 = True, T3 = False)
 
