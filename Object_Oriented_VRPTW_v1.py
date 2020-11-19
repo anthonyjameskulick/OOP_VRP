@@ -46,7 +46,7 @@ class VRP_Problem:
             self.new_dist = [0 for i in range(self.number_of_vehicles)]
         #self.first = None
         self.first = [0 for i in range(self.number_of_vehicles)]
-        self.all_points_set = {}
+        self.all_points_set = []
         self.dumas_before_sets = []
         self.VRP_before_set = None
         self.TW = [False for i in range(self.number_of_vehicles)]
@@ -63,8 +63,10 @@ class VRP_Problem:
         self.sorted_nt = [0 for i in range(self.number_of_vehicles)]
         self.sorted_nd = [0 for i in range(self.number_of_vehicles)]
         self.sorted_vo = [i for i in range(self.number_of_vehicles)]
+        self.rejected_labels = set()
         self.shortcut_memo = {}
 
+#shared functions
     def reset_problem(self):
         self.number_of_jobs = None
         self.number_of_jobs = None
@@ -103,7 +105,7 @@ class VRP_Problem:
             self.new_dist = [0 for i in range(self.number_of_vehicles)]
         #self.first = None
         self.first = [0 for i in range(self.number_of_vehicles)]
-        self.all_points_set = {}
+        self.all_points_set = []
         self.dumas_before_sets = []
         self.VRP_before_set = None
         self.TW = [False for i in range(self.number_of_vehicles)]
@@ -120,7 +122,9 @@ class VRP_Problem:
         self.sorted_nt = [0 for i in range(self.number_of_vehicles)]
         self.sorted_nd = [0 for i in range(self.number_of_vehicles)]
         self.sorted_vo = [i for i in range(self.number_of_vehicles)]
+        self.rejected_labels = set()
         self.shortcut_memo = {}
+    
         return
 
     def read_in_data(self, data, travel_times_multiplier):
@@ -135,7 +139,7 @@ class VRP_Problem:
             self.service_times.append(int(d['service']))
         self.job_locations = np.array(self.job_locations)
         self.number_of_jobs = len(self.start_times)
-        self.all_points_set = set(range(self.number_of_jobs))
+        self.all_points_set = list(range(self.number_of_jobs))
         self.distances_array = np.array([[np.linalg.norm(self.job_locations[i] - self.job_locations[j])
                                  for i in range(self.number_of_jobs)]
                                 for j in range(self.number_of_jobs)])
@@ -171,7 +175,7 @@ class VRP_Problem:
                                 for j in range(self.number_of_jobs)])
             self.distances_array = np.round(self.distances_array, 2)
             self.travel_times_array = travel_times_multiplier * np.round(self.distances_array, 2)
-            self.all_points_set = set(range(self.number_of_jobs))
+            self.all_points_set = list(range(self.number_of_jobs))
             testdata = pd.DataFrame({'name' : name, 'xcoord' : x, 'ycoord' : y, 'start' : start, 'end' : end, 'service' : service_time})
             testdata.to_csv('testinstances.csv', sep='\t',index=False)
             self.df = pd.DataFrame({'xcoord' : x, 'ycoord' : y, 'start time' : start, 'end time' : end, 'service time' : service_time})
@@ -201,17 +205,25 @@ class VRP_Problem:
                                 for j in range(self.number_of_jobs)])
             self.distances_array = np.round(self.distances_array, 2)
             self.travel_times_array = np.round(self.distances_array, 2)
-            self.all_points_set = set(range(self.number_of_jobs))
+            self.all_points_set = list(range(self.number_of_jobs))
             testdata = pd.DataFrame({'name' : name, 'xcoord' : x, 'ycoord' : y, 'start' : self.start_times, 'end' : self.end_times, 'service' : self.service_times})
             testdata.to_csv(save_name, sep='\t',index=False)
             self.df = pd.DataFrame({'xcoord' : x, 'ycoord' : y, 'start time' : self.start_times, 'end time' : self.end_times, 'service time' : self.service_times})
 
         return 
 
-    #TSPTW functions:
     def dumas_latest_departure_time(self, x, y):
         ldt = self.end_times[y]-self.service_times[y]-self.travel_times_array[x][y]-self.service_times[x]
         return ldt
+
+    def special_values(self):
+        self.dumas_before_sets = [[ ] for y in self.all_points_set]
+        rows, cols = (range(len(self.distances_array)), range(len(self.distances_array)))
+        self.LDT_array = np.array([[self.dumas_latest_departure_time(i,j) for i in rows] for j in cols])
+        logging.info(f"LDT array = {self.LDT_array}")
+        self.before_sets = [self.dumas_before(i)[i] for i in self.all_points_set]
+        logging.info(f"before sets = {self.before_sets}")
+        return
 
     def dumas_before(self, x):
         for i in self.all_points_set:
@@ -221,7 +233,8 @@ class VRP_Problem:
                 else:
                     continue
         return self.dumas_before_sets
-    
+
+#TSPTW functions
     def restricted_labels_check(self):
         logging.info(f"checking if ({self.new_visited}, {self.new_last_point}, {self.new_time}) is on restricted list")
         if self.test3_restricted_labels.get((tuple(sorted(self.new_visited)), self.new_last_point)) == None:
@@ -251,12 +264,16 @@ class VRP_Problem:
     def dumas_test2(self):
         logging.debug(f"before({self.new_last_point})={self.before_sets[self.new_last_point]}")
         logging.debug(f"S = {self.new_visited}")
-        if set(self.before_sets[self.new_last_point]).issubset(set(self.new_visited)) == False:
-            test2 = False
-            logging.info(f"({self.new_visited}, {self.new_last_point}, {self.new_time}) fails test 2")
-        else: 
+        flag = 0
+        if all(x in self.before_sets[self.new_last_point] for x in self.new_visited):
+            flag = 1
+        if flag:
             test2 = True
             logging.info(f"({self.new_visited}, {self.new_last_point}, {self.new_time}) passes test 2")
+        else: 
+            test2 = False
+            logging.info(f"({self.new_visited}, {self.new_last_point}, {self.new_time}) fails test 2")
+            
         return test2
 
     def dumas_first(self):
@@ -270,31 +287,31 @@ class VRP_Problem:
         return
 
     def dumas_test1(self):
-        
-        if len(self.all_points_set.difference(self.new_visited)) == 0:
+        check = [i for i in all_points_set if i not in self.new_visited]
+        if len(check) == 0:
             test1 = True
-        elif self.first > min(self.LDT_array[j][self.new_last_point] for j in self.all_points_set.difference(self.new_visited)): 
-            logging.debug(f"first = {self.first} > {min(self.LDT_array[j][self.new_last_point] for j in self.all_points_set.difference(self.new_visited))}")
+        elif self.first > min(self.LDT_array[j][self.new_last_point] for j in check): 
             logging.info(f"({self.new_visited}, {self.new_last_point}, {self.new_time}) fails test 1")
             test1 = False
         else:
-            logging.debug(f"first = {self.first} > {min(self.LDT_array[j][self.new_last_point] for j in self.all_points_set.difference(self.new_visited))}")
             logging.info(f"({self.new_visited}, {self.new_last_point}, {self.new_time}) passes test 1")
             test1 = True
         return test1
 
     def dumas_test3(self):
         logging.debug(f"adding to restricted labels")
-        for x in self.all_points_set.difference(self.new_visited):
+        check1 = [i for i in all_points_set if i not in self.new_visited]
+        for x in check1:
                 new_visited1 = sorted(self.new_visited)
                 new_last_point1 = self.new_last_point
                 new_time1 = self.new_time
                 if self.new_time <= self.LDT_array[x][self.new_last_point]:
                     new_visited1 = [x] + list(new_visited1)
-                    new_visited1 = tuple(sorted(new_visited1))
                     new_last_point1 = x
                     new_time1 = self.new_time+self.service_times[self.new_last_point]+self.travel_times_array[self.new_last_point][x]
-                    for y in self.all_points_set.difference(new_visited1):
+                    check2 = [i for i in all_points_set if i not in new_visited1]
+                    new_visited1 = tuple(sorted(new_visited1))
+                    for y in check2:
                         new_visited2 = list(sorted(new_visited1))
                         new_last_point2 = new_last_point1
                         new_time2 = new_time1
@@ -314,8 +331,8 @@ class VRP_Problem:
                 else: 
                     continue
         logging.debug(f"new restricted labels: {self.test3_restricted_labels}")
-        return
-        
+        return    
+
     def dominance_test(self):
         logging.info(f"starting dominance check:")
         if len({k: v for k, v in self.memo.items() if k[0]==self.new_visited and k[1]==self.new_last_point}) != 0: #possible dominated situation            
@@ -364,7 +381,8 @@ class VRP_Problem:
             last_point = path_key[1]
             optimal_cost, next_to_last_point, prev_time = memo[path_key]
             optimal_path = [last_point]
-            points_to_retrace = tuple(sorted(set(points_to_retrace).difference({last_point})))
+            res1 = [i for i in points_to_retrace if i not in last_point]
+            points_to_retrace = tuple(sorted(res1))
 
             while next_to_last_point is not None:
                 last_point = next_to_last_point
@@ -373,7 +391,8 @@ class VRP_Problem:
                 _, next_to_last_point, prev_time = memo[path_key]
                 optimal_path = [last_point] + optimal_path
                 optimal_path_arrival_times = [end_time] + optimal_path_arrival_times
-                points_to_retrace = tuple(sorted(set(points_to_retrace).difference({last_point})))
+                res1 = [i for i in points_to_retrace if i not in last_point]
+                points_to_retrace = tuple(sorted(res1))
 
             start1 = [self.start_times[i] for i in optimal_path]
             end1 = [self.end_times[i] for i in optimal_path]
@@ -384,7 +403,7 @@ class VRP_Problem:
             print("time check:")
             print(self.df1)
         return optimal_path, optimal_cost
-
+    
     def Dumas_TSPTW_Solve(self, T1, T2, T3):
         self.dumas_before_sets = [[ ] for y in self.all_points_set]
         self.special_values()
@@ -395,7 +414,8 @@ class VRP_Problem:
             self.prev_visited, self.prev_last_point, self.prev_time = self.queue.pop(0)
             self.prev_dist, _, _ = self.memo[(self.prev_visited, self.prev_last_point, self.prev_time)]
             logging.info(f"extending from ({self.prev_visited}, {self.prev_last_point}, {self.prev_time})")
-            to_visit = self.all_points_set.difference(set(self.prev_visited))
+            to_visit = [i for i in all_points_set if i not in self.prev_visited]
+            
             for self.new_last_point in to_visit:
                 self.new_visited = tuple(sorted(list(self.prev_visited) + [self.new_last_point]))
                 self.new_dist = self.prev_dist + self.distances_array[self.prev_last_point][self.new_last_point]
@@ -442,35 +462,8 @@ class VRP_Problem:
     
         return self.optimal_path, self.optimal_cost, self.df1
 
-    #VRP functions:
-    def special_values(self):
-        self.dumas_before_sets = [[ ] for y in self.all_points_set]
-        rows, cols = (range(len(self.distances_array)), range(len(self.distances_array)))
-        self.LDT_array = np.array([[self.dumas_latest_departure_time(i,j) for i in rows] for j in cols])
-        logging.info(f"LDT array = {self.LDT_array}")
-        self.before_sets = [self.dumas_before(i)[i] for i in self.all_points_set]
-        logging.info(f"before sets = {self.before_sets}")
-        return
-    
-    def shortcut_search(self):
-        logging.debug(f"start shortcut search")
-        search_times = self.shortcut_memo.get((tuple(self.new_visited), tuple(self.sorted_nlp)))
-        logging.debug(f"search times = {search_times}")
-        if search_times != None:
-            logging.debug(f"the length of search times = {len(search_times)}")
-            for i in range(len(search_times)):
-                self.label_check[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(search_times[i]))] = self.memo.get((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(search_times[i])))
-            logging.debug(f"label check = {self.label_check}")
-        else:
-            pass
-        #self.label_check1 = {k: v for k, v in self.memo.items() if k[0]==self.new_visited and k[1]==self.sorted_nlp}
-        logging.debug(f"the label check is {self.label_check} ")
-        #logging.debug(f"the old label check is {self.label_check1}")
-        logging.debug(f"the shortcut memo is {self.shortcut_memo}")
-        logging.debug(f"end shortcut search")
-        return
-
-    #this checks to see if the exact same label is already in the memo, if so, the current label is abandoned otherwise the other checks proceed
+#VRPTW functions
+#this checks to see if the exact same label is already in the memo, if so, the current label is abandoned otherwise the other checks proceed
     def duplicate_label_check_VRP(self):
         #sorted_nlp, sorted_nt, sorted_nd, sorted_vo = zip(*sorted(zip(self.new_last_point, self.new_time, self.new_dist, self.vehicle_order)))
         dup_label_check = {k: v for k, v in self.label_check.items() if k[0]==self.new_visited and k[1]==self.sorted_nlp and k[2]==self.sorted_nt}
@@ -494,29 +487,18 @@ class VRP_Problem:
         if dup_lab_check == False:
             self.dup_lab_rejected = self.dup_lab_rejected + 1
         return dup_lab_check
-
-    def duplicate_label_check_VRP_update(self):
-        logging.debug(f"the duplicate label check has begun.")
-        dup_lab_check = True
-        dup_lab_time1 = self.shortcut_memo.get((self.new_visited, self.sorted_nlp))
-        logging.debug(f"duplicate label times are {dup_lab_time1}")
-        if dup_lab_time1 == None:
-            logging.debug(f"this label has not yet been stored in memo")
-        else:
-            logging.debug(f"we have stored the partial label {self.new_visited}, {self.sorted_nlp} before")
-            for i in range(len(dup_lab_time1)):
-                dup_lab_dist1, _, _, _ = self.memo.get((self.new_visited, self.sorted_nlp, tuple(dup_lab_time1)[i]))
-                if dup_lab_dist1 == self.sorted_nd:
-                    logging.debug(f"retrieved dist = {dup_lab_dist1} and current dist = {self.sorted_nd}")
-                    dup_lab_check = False
-                    logging.debug(f"the label {self.new_visited}, {self.sorted_nlp}, {self.sorted_nt} IS a duplicate label")
- 
-                if dup_lab_check == True:
-                    logging.debug(f"the current label is not currently stored in the memo")
-        logging.debug(f"the duplicate label check has ended.")
-        if dup_lab_check == False:
+        
+    def duplicate_label_check_VRP_update2(self):
+        logging.info(f"starting duplicate label check")
+        if ((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)) in self.memo) or ((self.new_visited, self.sorted_nlp, self.sorted_nt) in self.rejected_labels):
+            dup_lab_check = False
+            logging.info(f"the label {(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))} HAS already been encountered")
             self.dup_lab_rejected = self.dup_lab_rejected + 1
-        return dup_lab_check
+        else:
+            dup_lab_check = True
+            logging.info(f"the label {(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))} HAS NOT already been encountered")
+        logging.info(f"duplicate label check ended.")
+        return dup_lab_check #most recent version
 
     def VRP_time_window_check(self):
         logging.info(f"start TW check")  
@@ -538,26 +520,50 @@ class VRP_Problem:
         logging.info(f"time window test = {TW_test}")
         if TW_test == False:
             self.TW_rejected = self.TW_rejected + 1
+            self.rejected_labels.add((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
         return TW_test
-
+    
     def before_VRP(self):
         Y = [self.dumas_before_sets[x] for x in self.sorted_nlp]
-        self.VRP_before_set = set(Y[0]).intersection(*Y)
-        return self.VRP_before_set 
+        self.VRP_before_set = set(Y[0]).intersection(*Y) #come back to this
+        return self.VRP_before_set
 
     def VRP_test2(self):
         self.before_VRP()
         logging.debug(f"before({self.sorted_nlp})={self.VRP_before_set}")
         logging.debug(f"S = {self.new_visited}")
-        if self.VRP_before_set.issubset(set(self.new_visited)) == False:
+        flag = 0
+        if(all(x in self.new_visited for x in self.VRP_before_set)):
+            flag =1
+        if flag:
+            test2 = True
+            logging.info(f"({self.new_visited}, {self.sorted_nlp}, {self.sorted_nt}) passes test 2")            
+        else: 
             test2 = False
             logging.info(f"({self.new_visited}, {self.sorted_nlp}, {self.sorted_nt}) fails test 2")
-        else: 
-            test2 = True
-            logging.info(f"({self.new_visited}, {self.sorted_nlp}, {self.sorted_nt}) passes test 2")
         if test2 == False:
             self.test2_rejected = self.test2_rejected + 1
+            self.rejected_labels.add((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
         return test2
+
+    def shortcut_search(self):
+        self.label_check.clear()
+        logging.debug(f"start shortcut search")
+        search_times = self.shortcut_memo.get((tuple(self.new_visited), tuple(self.sorted_nlp)))
+        logging.debug(f"search times = {search_times}")
+        if search_times != None:
+            logging.debug(f"the length of search times = {len(search_times)}")
+            for i in range(len(search_times)):
+                self.label_check[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(search_times[i]))] = self.memo.get((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(search_times[i])))
+            logging.debug(f"label check = {self.label_check}")
+        else:
+            pass
+        #self.label_check1 = {k: v for k, v in self.memo.items() if k[0]==self.new_visited and k[1]==self.sorted_nlp}
+        logging.debug(f"the label check is {self.label_check} ")
+        #logging.debug(f"the old label check is {self.label_check1}")
+        logging.debug(f"the shortcut memo is {self.shortcut_memo}")
+        logging.debug(f"end shortcut search")
+        return
 
     #the first function determines the earliest time a vehicle arrives at the jobs in V_i while servicing the jobs in S_i
     def VRP_first(self):
@@ -589,7 +595,7 @@ class VRP_Problem:
         return
 
     def VRP_test1A(self):
-        unreachable_points = self.all_points_set.difference(self.new_visited)
+        unreachable_points = [i for i in self.all_points_set if i not in self.new_visited]
         logging.debug(f"unreachable points = {unreachable_points}")
         if len(unreachable_points) != 0:
             self.VRP_first()
@@ -604,7 +610,8 @@ class VRP_Problem:
                 for j in unreachable_points:
                     if self.first[vehicle_to_check] <= self.LDT_array[j][self.sorted_nlp[vehicle_to_check]]:
                         logging.debug(f"first = {self.first[vehicle_to_check]} <= LDT({j},{self.sorted_nlp[vehicle_to_check]}) = {self.LDT_array[j][self.sorted_nlp[vehicle_to_check]]}")
-                        unreachable_points = unreachable_points.difference({j})
+                        unreachable_points = [i for i in unreachable_points if i not in [j]]
+                        
                         logging.debug(f"unreachable points are now = {unreachable_points}")
                     else:
                         logging.debug(f"first = {self.first[vehicle_to_check]} > LDT({j},{self.sorted_nlp[vehicle_to_check]}) = {self.LDT_array[j][self.sorted_nlp[vehicle_to_check]]}")
@@ -622,11 +629,12 @@ class VRP_Problem:
             logging.info(f"test 1 passed")
         if test1 == False:
             self.test1_rejected = self.test1_rejected + 1
-        return test1
+            self.rejected_labels.add((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
+        return test1 #most recent version
 
     def VRP_test1(self):
-        
-        if len(self.all_points_set.difference(self.new_visited)) == 0:
+        check = [i for i in all_points_set if i not in self.new_visited]
+        if len(check) == 0:
             test1 = True
             logging.debug(f"test1 = {test1}")
         else:            
@@ -638,7 +646,7 @@ class VRP_Problem:
             logging.debug(f"T1_LDT = {T1_LDT}")
             #input()
             for i in range(self.number_of_vehicles):
-                T1_LDT[i] = int(min(self.LDT_array[j][self.new_last_point[i]] for j in self.all_points_set.difference(self.new_visited)))
+                T1_LDT[i] = int(min(self.LDT_array[j][self.new_last_point[i]] for j in check))
             T1_LDT=tuple(T1_LDT)
             logging.debug(f"T1_LDT = {T1_LDT}")
             #input()
@@ -657,8 +665,9 @@ class VRP_Problem:
                 logging.info(f"({self.new_visited}, {self.new_last_point}, {self.new_time}) passes test 1")
                 test1 = True
                 logging.debug(f"test1 = {test1}")
-        return test1 
+        return test1
 
+    #dominance test checks to see if the current label has is totally dominated by any label already stored.  If so the current label is not added.  Otherwise the current label is added and then it checks to see if the current label totally dominates any existing label.  If so those existing labels that are totally dominated are deleted.  If no existing labels are dominated nothing happens.
     def VRP_dominance_test(self):
         logging.info(f"starting dominance check:")
         sorted_nlp, sorted_nt, sorted_nd, sorted_vo = zip(*sorted(zip(self.new_last_point, self.new_time, self.new_dist, self.vehicle_order)))
@@ -701,7 +710,6 @@ class VRP_Problem:
             #input()
         return
 
-    #dominance test checks to see if the current label has is totally dominated by any label already stored.  If so the current label is not added.  Otherwise the current label is added and then it checks to see if the current label totally dominates any existing label.  If so those existing labels that are totally dominated are deleted.  If no existing labels are dominated nothing happens.
     def VRP_dominance_test_update(self):
         logging.info(f"starting dominance check:")
         #sorted_nlp, sorted_nt, sorted_nd, sorted_vo = zip(*sorted(zip(self.new_last_point, self.new_time, self.new_dist, self.vehicle_order)))
@@ -710,9 +718,11 @@ class VRP_Problem:
         logging.debug(f"possible dominated labels = {dom_lab}")
         if len(dom_lab) != 0: #possible dominated situation            
             dom_lab_keys = [key for key in dom_lab.keys()]
+            logging.debug(f"possible dominated label keys = {dom_lab_keys}")
             dom_lab_times = [dom_lab_keys[i][2] for i in range(len(dom_lab_keys))]
             logging.debug(f"possible dominated label times = {dom_lab_times}")
             dom_lab_values = [value for value in dom_lab.values()]
+            logging.debug(f"possible dominated label values = {dom_lab_values}")
             dom_lab_dist = [dom_lab_values[i][0] for i in range(len(dom_lab_values))]
             logging.debug(f"possible dominated label distances = {dom_lab_dist}")
             time_check = [[False for j in range(self.number_of_vehicles)] for i in range(len(dom_lab))]
@@ -743,27 +753,28 @@ class VRP_Problem:
                     for i in label_to_delete:
                         del self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(dom_lab_times[i]))]
                         self.queue.remove((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(dom_lab_times[i])))
-                        del self.shortcut_memo[(tuple(self.new_visited), tuple(self.sorted_nlp))]
+                        #del self.shortcut_memo[(tuple(self.new_visited), tuple(self.sorted_nlp))] #delete the dominated value?
                         #self.deleted_labels.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(dom_lab_times[i])))
                         logging.info(f"the existing label {self.new_visited}, {self.sorted_nlp}, {dom_lab_times[i]} is totally dominated by the current label so it is deleted.")
                         self.dom_lab_rejected = self.dom_lab_rejected + 1
+                        self.rejected_labels.add((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
                     logging.info(f"the new label ({self.new_visited}, {self.sorted_nlp}, {self.sorted_nt}) is NOT totally dominated by existing labels, so it is added")
                     self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo)
-                    key = (tuple(self.new_visited), tuple(self.sorted_nlp)) 
-                    self.shortcut_memo.setdefault(key, [])
-                    self.shortcut_memo[key].append(tuple(self.sorted_nt))
                     self.queue.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
-                    self.added_labels.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
+                    #self.added_labels.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
+                    #key = (tuple(self.new_visited), tuple(self.sorted_nlp)) 
+                    #self.shortcut_memo.setdefault(key, [])
+                    #self.shortcut_memo[key].append(tuple(self.sorted_nt))
         else: 
             self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo)
-            key = (tuple(self.new_visited), tuple(self.sorted_nlp)) 
-            self.shortcut_memo.setdefault(key, [])
-            self.shortcut_memo[key].append(tuple(self.sorted_nt))
             self.queue.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
-            self.added_labels.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
+            #self.added_labels.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
+            #key = (tuple(self.new_visited), tuple(self.sorted_nlp)) 
+            #self.shortcut_memo.setdefault(key, [])
+            #self.shortcut_memo[key].append(tuple(self.sorted_nt))
             logging.info(f"no (S,V_i) label exists, {self.new_visited, self.sorted_nlp, self.sorted_nt} added") 
                
-        return
+        return #most recent version
 
     def retrace_optimal_path_VRP(self, memo: dict, n: int) -> [[int], float]:
         points_to_retrace = tuple(range(self.number_of_jobs))    
@@ -837,7 +848,8 @@ class VRP_Problem:
                         logging.debug(f"optimal path = {optimal_path}")
                         optimal_path_arrival_times[vehicle_order[i]] = [last_time[i]] + optimal_path_arrival_times[vehicle_order[i]]
                         logging.debug(f"optimal path arrival times = {optimal_path_arrival_times}")
-                        points_to_retrace = tuple(sorted(set(points_to_retrace).difference({point_to_remove})))
+                        res1 = [i for i in points_to_retrace if i not in [point_to_remove]]
+                        points_to_retrace = tuple(sorted(res1))
                         logging.debug(f"points to retrace = {points_to_retrace}")
                         path_key = points_to_retrace, prev_last_point, prev_last_time
                         logging.debug(f"path key = {path_key}")
@@ -850,7 +862,8 @@ class VRP_Problem:
                     logging.debug(f"optimal path = {optimal_path}")
                     logging.debug(f"optimal path arrival times = {optimal_path_arrival_times}")
                     point_to_remove = 0
-                    points_to_retrace = tuple(sorted(set(points_to_retrace).difference({point_to_remove})))
+                    res1 = [i for i in points_to_retrace if i not in [point_to_remove]]
+                    points_to_retrace = tuple(sorted(res1))
                     logging.debug(f"points to retrace = {points_to_retrace}")
                     #input()    
         start1 = [[] for i in range(self.number_of_vehicles)]
@@ -886,7 +899,7 @@ class VRP_Problem:
         return self.optimal_path, self.optimal_cost
 
     def VRP_Solve(self, T1, T2):
-        self.all_points_set = {x for x in range(self.number_of_jobs)}
+        self.all_points_set = [x for x in range(self.number_of_jobs)]
         self.special_values()
         #input()
         self.queue = [(tuple([0]), tuple(self.prev_last_point), tuple(self.prev_time))]
@@ -904,7 +917,8 @@ class VRP_Problem:
             logging.debug(f"previous time = {self.prev_time}")
             logging.debug(f"previous distance = {self.prev_dist}")
             logging.debug(f"vehicle order = {self.vehicle_order}")
-            to_visit = self.all_points_set.difference(set(self.prev_visited))
+            to_visit = [i for i in self.all_points_set if i not in self.prev_visited]
+            
             logging.debug(f"to visit set = {to_visit}")
             for i in range(self.number_of_vehicles):
                 logging.info(f"for vehicle {i}")
@@ -917,11 +931,9 @@ class VRP_Problem:
                     self.new_dist[i] = self.prev_dist[i] + self.distances_array[self.prev_last_point[i]][self.new_last_point[i]]
                     self.new_time[i] = max(self.prev_time[i], self.start_times[self.prev_last_point[i]]) + self.service_times[self.prev_last_point[i]] + self.travel_times_array[self.prev_last_point[i]][self.new_last_point[i]]
                     logging.info(f"checking the new label ({self.new_visited},{self.new_last_point},{self.new_time}) with distances {self.new_dist}")
-                    self.label_check.clear()
                     self.sorted_nlp, self.sorted_nt, self.sorted_nd, self.sorted_vo = zip(*sorted(zip(self.new_last_point, self.new_time, self.new_dist, self.vehicle_order)))
-                    #self.label_check = {k: v for k, v in self.memo.items() if k[0]==self.new_visited and k[1]==self.sorted_nlp}
-                    self.shortcut_search()
-                    if not self.duplicate_label_check_VRP_update():
+                    self.label_check = {k: v for k, v in self.memo.items() if k[0]==self.new_visited and k[1]==self.sorted_nlp}
+                    if not self.duplicate_label_check_VRP_update2():
                         continue
                     
                     #input()
@@ -937,6 +949,7 @@ class VRP_Problem:
                     else:
                         logging.info(f"test 2 is not being used")
                     #input()
+                    #self.shortcut_search()
                     if T1:                    
                         if not self.VRP_test1A():
                             logging.debug(f"tests ended, label rejected")
@@ -951,13 +964,11 @@ class VRP_Problem:
         logging.debug(f"queue = {self.queue}")
         logging.debug(f"memo = {self.memo}")
 
-                
-        #input()
-        #end while
         self.optimal_path, self.optimal_cost = self.retrace_optimal_path_VRP(self.memo, self.number_of_jobs)
     
         return self.optimal_path, self.optimal_cost, self.df1
 
+#main solver
     def Solver(self, read_in_data, data, random_data, instances, timeframe, locationframe, servicetime, serviceframe, travel_times_multiplier, save_name, T1, T2, T3):
         self.reset_problem()
         if read_in_data == True:
@@ -995,10 +1006,12 @@ class VRP_Problem:
         return
 
     
-#logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
+#logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 a = VRP_Problem(number_of_vehicles = 2)
-a.Solver(read_in_data = True, data = 'VRP_testing_1.csv', random_data = False, instances = 6, timeframe = 450, locationframe = 100, servicetime = True, serviceframe = 25, travel_times_multiplier = 1, save_name = 'VRP_small_test_v2.csv', T1 = True, T2 = True, T3 = False)
-
-
-
+#a.read_in_data('VRP_testing_1.csv', 1)
+a.Solver(read_in_data = True, data = 'VRP_testing_25_jobs_1', random_data = False, instances = 6, timeframe = 450, locationframe = 100, servicetime = True, serviceframe = 25, travel_times_multiplier = 1, save_name = 'VRP_small_test_v2.csv', T1 = True, T2 = True, T3 = False)
+#names = ['VRP_testing_25_jobs_1', 'VRP_testing_25_jobs_2', 'VRP_testing_25_jobs_3', 'VRP_testing_25_jobs_4', 'VRP_testing_25_jobs_5']
+#for i in range(len(names)):
+    #a.reset_problem()
+    #a.random_data_generator(instances = 25, timeframe = 2000, locationframe = 100, servicetime = True, serviceframe =25, travel_times_multiplier = 1, save_name = names[i])
     
