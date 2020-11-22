@@ -1009,9 +1009,10 @@ class VRP_Problem:
 #logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 a = VRP_Problem(number_of_vehicles = 2)
 #a.read_in_data('VRP_testing_1.csv', 1)
-a.Solver(read_in_data = True, data = 'VRP_testing_25_jobs_1', random_data = False, instances = 6, timeframe = 450, locationframe = 100, servicetime = True, serviceframe = 25, travel_times_multiplier = 1, save_name = 'VRP_small_test_v2.csv', T1 = True, T2 = True, T3 = False)
-#names = ['VRP_testing_25_jobs_1', 'VRP_testing_25_jobs_2', 'VRP_testing_25_jobs_3', 'VRP_testing_25_jobs_4', 'VRP_testing_25_jobs_5']
-#for i in range(len(names)):
-    #a.reset_problem()
-    #a.random_data_generator(instances = 25, timeframe = 2000, locationframe = 100, servicetime = True, serviceframe =25, travel_times_multiplier = 1, save_name = names[i])
-    
+names = ['VRP_testing_10_jobs_1', 'VRP_testing_10_jobs_2', 'VRP_testing_10_jobs_3', 'VRP_testing_10_jobs_4', 'VRP_testing_10_jobs_5','VRP_testing_15_jobs_1', 'VRP_testing_15_jobs_2', 'VRP_testing_15_jobs_3', 'VRP_testing_15_jobs_4', 'VRP_testing_15_jobs_5','VRP_testing_20_jobs_1', 'VRP_testing_20_jobs_2', 'VRP_testing_20_jobs_3', 'VRP_testing_20_jobs_4', 'VRP_testing_20_jobs_5','VRP_testing_25_jobs_1', 'VRP_testing_25_jobs_2', 'VRP_testing_25_jobs_3', 'VRP_testing_25_jobs_4', 'VRP_testing_25_jobs_5']
+names10 = ['VRP_testing_10_jobs_1', 'VRP_testing_10_jobs_2', 'VRP_testing_10_jobs_3', 'VRP_testing_10_jobs_4', 'VRP_testing_10_jobs_5']
+names15 = ['VRP_testing_15_jobs_1', 'VRP_testing_15_jobs_2', 'VRP_testing_15_jobs_3', 'VRP_testing_15_jobs_4', 'VRP_testing_15_jobs_5']
+names20 = ['VRP_testing_20_jobs_1', 'VRP_testing_20_jobs_2', 'VRP_testing_20_jobs_3', 'VRP_testing_20_jobs_4', 'VRP_testing_20_jobs_5']
+names25 = ['VRP_testing_25_jobs_1', 'VRP_testing_25_jobs_2', 'VRP_testing_25_jobs_3', 'VRP_testing_25_jobs_4', 'VRP_testing_25_jobs_5']
+for i in range(len(names)):
+   a.Solver(read_in_data = True, data = names[i], random_data = False, instances = 6, timeframe = 450, locationframe = 100, servicetime = True, serviceframe = 25, travel_times_multiplier = 1, save_name = 'VRP_small_test_v2.csv', T1 = True, T2 = True, T3 = False)
