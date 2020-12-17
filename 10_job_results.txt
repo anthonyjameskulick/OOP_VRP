@@ -1,3 +1,4 @@
+using input VRP_testing_10_jobs_1
    xcoord  ycoord  start time  end time  service time
 0       0       0           0      2000             0
 1      71      16        1701      1846            20
@@ -34,6 +35,10 @@ time window check rejected 2675 labels.
 test 2 rejected 2386 labels.
 test 1 rejected 0 labels.
 dominance check rejected 0 labels.
+
+-----------------------------------------------------------------------------------------------------------------------------------------------
+using input VRP_testing_10_jobs_2
+
    xcoord  ycoord  start time  end time  service time
 0       0       0           0      2000             0
 1     -97     -64          24      1935            11
@@ -70,6 +75,10 @@ time window check rejected 7272 labels.
 test 2 rejected 2145 labels.
 test 1 rejected 33 labels.
 dominance check rejected 228 labels.
+
+-----------------------------------------------------------------------------------------------------------------------------------------------
+using input VRP_testing_10_jobs_3
+
    xcoord  ycoord  start time  end time  service time
 0       0       0           0      2000             0
 1     -10      92         933      1284            15
@@ -106,6 +115,10 @@ time window check rejected 6596 labels.
 test 2 rejected 3429 labels.
 test 1 rejected 125 labels.
 dominance check rejected 456 labels.
+
+-----------------------------------------------------------------------------------------------------------------------------------------------
+using input VRP_testing_10_jobs_4
+
    xcoord  ycoord  start time  end time  service time
 0       0       0           0      2000             0
 1     -69     -19         396      1105             4
@@ -142,6 +155,10 @@ time window check rejected 4060 labels.
 test 2 rejected 2727 labels.
 test 1 rejected 24 labels.
 dominance check rejected 234 labels.
+
+-----------------------------------------------------------------------------------------------------------------------------------------------
+using input VRP_testing_10_jobs_5
+
    xcoord  ycoord  start time  end time  service time
 0       0       0           0      2000             0
 1     -72      67        1771      1809            19
