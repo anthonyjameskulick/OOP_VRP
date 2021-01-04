@@ -1230,8 +1230,10 @@ class VRP_Problem:
             dom_lab_dist = [tuple(dom_lab_dist[i]) for i in range(len(dom_lab_dist))]
             #dom_lab_dist stips away everything but the costs 
             logging.debug(f"possible dominated label distances = {dom_lab_dist}")          
+            #dom_check_1_time checks to see if there is an existing label that dominates the time for each vehicle for the current label
             dom_check_1_time = [None for i in range(len(dom_lab))]
             logging.debug(f"dom_check_1_time = {dom_check_1_time}")
+            #dom_check_1_dist checks to see if there is an existing label that dominates the distance for each vehicle for the current label
             dom_check_1_dist = [None for i in range(len(dom_lab))]
             for i in range(len(dom_lab)):
                 dom_check_1_time[i] = all(x >= y for x, y in zip(self.sorted_nt, dom_lab_times[i]))
@@ -1242,7 +1244,8 @@ class VRP_Problem:
                 logging.debug(f"sorted_nd = {self.sorted_nd}")
                 logging.debug(f"dom lab dist = {dom_lab_dist[i]}")
                 logging.debug(f"dom_check_1_dist = {dom_check_1_dist}")
-                
+            
+            #new_label_dominated checks to see if there is an existing label that dominates both times and distances for the current label.    
             new_label_dominated = False
             for i in range(len(dom_lab)):
                 if dom_check_1_time[i] and dom_check_1_dist[i]:
@@ -1250,12 +1253,16 @@ class VRP_Problem:
                     dominator = i
                 else:
                     continue
+            #when new_label_dominated is true the current label is rejected because there is an existing label that totally dominates it.
             if new_label_dominated:
                 logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt}) with costs {self.sorted_nd} is dominated by the existing label ({self.new_visited, self.sorted_nlp, dom_lab_times[dominator]}) with costs {dom_lab_dist[dominator]} so no new label is added.")
-                
+            
+                #when new_label_dominated is false the current label is not rejected because there is no existing label that totally dominates it.    
             else:
                 logging.info(f"no existing label completely dominates the current label.  Continue with other dominance tests")
+                #dom_check_2_time checks to see if the current label dominates the time for each vehicle for any existing label.
                 dom_check_2_time = [None for i in range(len(dom_lab))]
+                #dom_check_2_dist checks to see if the current label dominates the distance for each vehicle for any existing label.
                 dom_check_2_dist = [None for i in range(len(dom_lab))]
                 for i in range(len(dom_lab)):
                     dom_check_2_time[i] = all(x == y for x, y in zip(self.sorted_nt, dom_lab_times[i]))
@@ -1266,8 +1273,10 @@ class VRP_Problem:
                     logging.debug(f"sorted_nd = {self.sorted_nd}")
                     logging.debug(f"dom lab dist = {dom_lab_dist[i]}")
                     logging.debug(f"dom_check_2_dist = {dom_check_2_dist}")
-                    
+                
+                #existing_label_dominated checks to see if the current label dominates both times and distances for some existing label.     
                 existing_label_dominated = False
+                #if existing_label_dominated is true then that existing label is removed from the queue and memo
                 for i in range(len(dom_lab)):
                     if dom_check_2_time[i] and dom_check_2_dist[i]:
                         existing_label_dominated = True
@@ -1277,6 +1286,7 @@ class VRP_Problem:
                         
                     else:
                         logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt}) with costs {self.sorted_nd} DOES NOT dominate the existing label ({self.new_visited, self.sorted_nlp, dom_lab_times[i]}) with costs {dom_lab_dist[i]} so no the existing label remains.")
+                #when adding this new label we have to be quite careful because there might be an existing label with the same dictionary key, so first we check to see if that's the case.  If it is not the case, the current label is simply added.  Otherwise I add some trivial amount (<= 0.001 second) of time to the current label before adding it to the queue and memo.
                 if existing_label_dominated:
                     logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt}) with costs {self.sorted_nd} completely dominates at least one existing label so the current label is added.")
                     while (tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)) in dom_lab:
@@ -1284,18 +1294,21 @@ class VRP_Problem:
                         logging.debug(f"sorted_nt = {self.sorted_nt}")
                         self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo)
                         self.queue.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
+                #If no label is dominated by the current label, again, we have to be quite careful adding the current label because there might be an existing label with the same dictionary key, so first we check to see if that's the case.  If it is not the case, the current label is simply added.  Otherwise I add some trivial amount (<= 0.001 second) of time to the current label before adding it to the queue and memo.
                 else:
                     dom_check_3_time = [None for i in range(len(dom_lab))]
                     for i in range(len(dom_lab)):
+                        #dom_check_3_time checks to see if the current label is identical to an existing label.  
                         dom_check_3_time[i] =  all(x == y for x, y in zip(self.sorted_nt, dom_lab_times[i]))
                         logging.debug(f"sorted_nt = {self.sorted_nt}")
                         logging.debug(f"dom lab times = {dom_lab_times[i]}")
                         logging.debug(f"dom_check_3_time = {dom_check_3_time}")
-                        
+                    #existing_label_partially_dominated checks to see if the the current label is identical to any existing label.    
                     existing_label_partially_dominated = False
                     for i in range(len(dom_lab)):
                         if dom_check_3_time[i]:
                             existing_label_partially_dominated = True
+                    #If the current label is identical, I add some trivial amount (<= 0.001 second) of time to the current label before adding it to the queue and memo.
                     if existing_label_partially_dominated:
                         while (tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)) in dom_lab:
                             self.duplicate_dictionary_workaround()                    
@@ -1304,7 +1317,7 @@ class VRP_Problem:
                         self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo)
                         self.queue.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
                         logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt}) with costs {self.sorted_nd} is a duplicate label to some existing label, but with different values. So the current label is updated and added.")
-                        
+                    #If the current label is not identical to an existing label, the current label is simply added.    
                     else:
                         self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo)
                         self.queue.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
