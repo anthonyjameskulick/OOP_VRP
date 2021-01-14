@@ -664,7 +664,7 @@ class VRP_Problem:
             for i in self.sorted_nlp:
                 for j in remaining_jobs:
                     logging.debug(f"self.start_times[{i}] = {self.start_times[i]} and self.end_times[{j}] = {self.end_times[j]}")
-                    if self.start_times[i]>self.end_times[j]:
+                    if self.start_times[i]>=self.end_times[j]:
                         ja_check = False
         if ja_check == False:
             self.jump_ahead_rejected = self.jump_ahead_rejected + 1
@@ -1459,6 +1459,7 @@ class VRP_Problem:
         while self.queue:
             self.prev_visited, self.prev_last_point, self.prev_time = self.queue.pop(0)
             logging.debug(f"extending label {self.prev_visited}, {self.prev_last_point}, {self.prev_time}")
+            input()
             self.prev_dist, _, _, self.vehicle_order = self.memo[(tuple(self.prev_visited), tuple(self.prev_last_point), tuple(self.prev_time))]
             logging.debug(f"previously visited set = {self.prev_visited}")
             logging.debug(f"previous last point = {self.prev_last_point}")
@@ -1602,39 +1603,37 @@ class VRP_Problem:
 #logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 a = VRP_Problem(number_of_vehicles = 2)
 
-names = ['VRP_testing_10_jobs_1', 'VRP_testing_10_jobs_2', 'VRP_testing_10_jobs_3', 'VRP_testing_10_jobs_4', 'VRP_testing_10_jobs_5','VRP_testing_15_jobs_1', 'VRP_testing_15_jobs_2', 'VRP_testing_15_jobs_3', 'VRP_testing_15_jobs_4', 'VRP_testing_15_jobs_5','VRP_testing_20_jobs_1', 'VRP_testing_20_jobs_2', 'VRP_testing_20_jobs_3', 'VRP_testing_20_jobs_4', 'VRP_testing_20_jobs_5','VRP_testing_25_jobs_1', 'VRP_testing_25_jobs_2', 'VRP_testing_25_jobs_3', 'VRP_testing_25_jobs_4', 'VRP_testing_25_jobs_5']
+names = ['VRP_testing_05_jobs_1','VRP_testing_05_jobs_2', 'VRP_testing_05_jobs_3','VRP_testing_05_jobs_4', 'VRP_testing_05_jobs_5','VRP_testing_10_jobs_1', 'VRP_testing_10_jobs_2', 'VRP_testing_10_jobs_3', 'VRP_testing_10_jobs_4', 'VRP_testing_10_jobs_5','VRP_testing_15_jobs_1', 'VRP_testing_15_jobs_2', 'VRP_testing_15_jobs_3', 'VRP_testing_15_jobs_4', 'VRP_testing_15_jobs_5','VRP_testing_20_jobs_1', 'VRP_testing_20_jobs_2', 'VRP_testing_20_jobs_3', 'VRP_testing_20_jobs_4', 'VRP_testing_20_jobs_5','VRP_testing_25_jobs_1', 'VRP_testing_25_jobs_2', 'VRP_testing_25_jobs_3', 'VRP_testing_25_jobs_4', 'VRP_testing_25_jobs_5']
 names05 = ['VRP_testing_05_jobs_1','VRP_testing_05_jobs_2', 'VRP_testing_05_jobs_3','VRP_testing_05_jobs_4', 'VRP_testing_05_jobs_5']
 names10 = ['VRP_testing_10_jobs_1', 'VRP_testing_10_jobs_2', 'VRP_testing_10_jobs_3', 'VRP_testing_10_jobs_4', 'VRP_testing_10_jobs_5']
 names15 = ['VRP_testing_15_jobs_1', 'VRP_testing_15_jobs_2', 'VRP_testing_15_jobs_3', 'VRP_testing_15_jobs_4', 'VRP_testing_15_jobs_5']
 names20 = ['VRP_testing_20_jobs_1', 'VRP_testing_20_jobs_2', 'VRP_testing_20_jobs_3', 'VRP_testing_20_jobs_4', 'VRP_testing_20_jobs_5']
 names25 = ['VRP_testing_25_jobs_1', 'VRP_testing_25_jobs_2', 'VRP_testing_25_jobs_3', 'VRP_testing_25_jobs_4', 'VRP_testing_25_jobs_5']
 
-sja = [False, True, False, False]
-wja = [False, False, True, False]
-jau = [False, False, False, True]
-#dom = [False, False, False, False, True, True, True, True, True]
-#dup = [False, True, True, True, False, True, True, True, True]
-#t1 = [False, False, False, True, False, False, True, False, True]
-#t2 = [False, False, True, False, False, False, False, True, True]
-dom = [True, True, True, True, True]
-dup = [False, True, True, True, True]
-t1 = [False, False, True, False, True]
-t2 = [False, False, False, True, True]
+
+#wja = [False, False, True, False]
+#jau = [False, False, False, True]
+t1 = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True]
+t2 = [False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True]
+dom = [False, False, False, False, True, True, True, True, False, False, False, False, True, True, True, True, False, False, False, False, True, True, True, True, False, False, False, False, True, True, True, True]
+dup = [False, False, True, True, False, False, True, True, False, False, True, True, False, False, True, True, False, False, True, True, False, False, True, True, False, False, True, True, False, False, True, True]
+sja = [False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True]
+
+
 
 
 for i in range(len(names05)):
-    for k in range(len(dom)):
-        for j in range(len(sja)):
-            print(f"data set = {names05[i]}")
-            print(f"TW = True")
-            print(f"DUP = {dup[k]}")
-            print(f"SJA = {sja[j]}")
-            print(f"WJA = {wja[j]}")
-            print(f"JAU = {jau[j]}")
-            print(f"T1 = {t1[k]}")
-            print(f"T2 = {t2[k]}")
-            print(f"DOM = {dom[k]}")
-            a.Solver(read_in_data = True, data = names05[i], random_data = False, instances = 7, timeframe = 2000, locationframe = 100, servicetime = True, serviceframe = 25, travel_times_multiplier = 1, save_name = names05[i], DUP = dup[k], TW = True, T1 = t1[k], T2 = t2[k], T3 = False, SJA = sja[j], WJA = wja[j], JAU = jau[j], DOM = dom[k])
+    for j in range(len(dom)):
+        print(f"data set = {names05[i]}")
+        print(f"TW = True")
+        print(f"DUP = {dup[j]}")
+        print(f"SJA = {sja[j]}")
+        #print(f"WJA = {wja[j]}")
+        #print(f"JAU = {jau[j]}")
+        print(f"T1 = {t1[j]}")
+        print(f"T2 = {t2[j]}")
+        print(f"DOM = {dom[j]}")
+        a.Solver(read_in_data = True, data = names[i], random_data = False, instances = 7, timeframe = 2000, locationframe = 100, servicetime = True, serviceframe = 25, travel_times_multiplier = 1, save_name = names[i], DUP = dup[j], TW = True, T1 = t1[j], T2 = t2[j], T3 = False, SJA = sja[j], WJA = False, JAU = False, DOM = dom[j])
             
 
 
