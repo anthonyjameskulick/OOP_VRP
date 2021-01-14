@@ -1,0 +1,7 @@
+xcoord	ycoord	start	end	service
+0	0	0	100	0
+1	0	0	1	0
+-2	0	2	2	0
+1	5	10	12	0
+-4	0	2	6	0
+-4	-3	5	10	0
