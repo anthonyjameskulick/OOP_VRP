@@ -1459,7 +1459,7 @@ class VRP_Problem:
         while self.queue:
             self.prev_visited, self.prev_last_point, self.prev_time = self.queue.pop(0)
             logging.debug(f"extending label {self.prev_visited}, {self.prev_last_point}, {self.prev_time}")
-            input()
+            
             self.prev_dist, _, _, self.vehicle_order = self.memo[(tuple(self.prev_visited), tuple(self.prev_last_point), tuple(self.prev_time))]
             logging.debug(f"previously visited set = {self.prev_visited}")
             logging.debug(f"previous last point = {self.prev_last_point}")
@@ -1540,7 +1540,7 @@ class VRP_Problem:
                     
                     logging.info(f"tests ended")
                     #if len(self.new_visited) == 7:
-                        #input()
+                       
                     if DOM:
                         self.VRP_dominance_test_update2()
                     else:
