@@ -1540,7 +1540,7 @@ class VRP_Problem:
                     
                     logging.info(f"tests ended")
                     #if len(self.new_visited) == 7:
-                       
+                        #input()
                     if DOM:
                         self.VRP_dominance_test_update2()
                     else:
@@ -1622,9 +1622,9 @@ sja = [False, True, False, True, False, True, False, True, False, True, False, T
 
 
 
-for i in range(len(names05)):
+for i in range(len(names)):
     for j in range(len(dom)):
-        print(f"data set = {names05[i]}")
+        print(f"data set = {names[i]}")
         print(f"TW = True")
         print(f"DUP = {dup[j]}")
         print(f"SJA = {sja[j]}")
