@@ -67,7 +67,7 @@ class VRP_Problem:
         self.sorted_nt = [0 for i in range(self.number_of_vehicles)]
         self.sorted_nd = [0 for i in range(self.number_of_vehicles)]
         self.sorted_vo = [i for i in range(self.number_of_vehicles)]
-        self.rejected_labels = []
+        self.rejected_labels = {}
         self.shortcut_memo = {}
         self.labels_considered = 0
         self.b = 0
@@ -131,7 +131,7 @@ class VRP_Problem:
         self.sorted_nt = [0 for i in range(self.number_of_vehicles)]
         self.sorted_nd = [0 for i in range(self.number_of_vehicles)]
         self.sorted_vo = [i for i in range(self.number_of_vehicles)]
-        self.rejected_labels = []
+        self.rejected_labels = {}
         self.shortcut_memo = {}
         self.labels_considered = 0
         self.b = 0
@@ -652,7 +652,7 @@ class VRP_Problem:
         logging.debug(f"TW = {self.TW}")
         if False in self.TW:
             TW_test = False
-            self.rejected_labels = self.rejected_labels + [(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)]
+            self.rejected_labels[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)] = list(self.sorted_nd)
         else:
             TW_test = True
         logging.info(f"time window test = {TW_test}")
@@ -738,7 +738,7 @@ class VRP_Problem:
             logging.info(f"({self.new_visited}, {self.sorted_nlp}, {self.sorted_nt}) fails test 2")
         if test2 == False:
             self.test2_rejected = self.test2_rejected + 1
-            self.rejected_labels[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)]=self.sorted_nd
+            self.rejected_labels[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)]=list(self.sorted_nd)
         return test2
 
     def shortcut_search(self):
@@ -824,7 +824,7 @@ class VRP_Problem:
             logging.info(f"test 1 passed")
         if test1 == False:
             self.test1_rejected = self.test1_rejected + 1
-            self.rejected_labels[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)]=self.sorted_nd
+            self.rejected_labels[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)]=list(self.sorted_nd)
         return test1 #most recent version
 
     def VRP_test1(self):
@@ -966,7 +966,7 @@ class VRP_Problem:
                         #self.deleted_labels.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(dom_lab_times[i])))
                         logging.info(f"the existing label {self.new_visited}, {self.sorted_nlp}, {dom_lab_times[i]} is totally dominated by the current label so it is deleted.")
                         self.dom_lab_rejected = self.dom_lab_rejected + 1
-                        self.rejected_labels = self.rejected_labels + [(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)]
+                        self.rejected_labels[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)] = list(self.sorted_nd)
                     logging.info(f"the new label ({self.new_visited}, {self.sorted_nlp}, {self.sorted_nt}) is NOT totally dominated by existing labels, so it is added")
                     self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo)
                     self.queue.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
@@ -1613,7 +1613,7 @@ class VRP_Problem:
         return
 
     
-#logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 a = VRP_Problem(number_of_vehicles = 2)
 
 names = ['VRP_testing_05_jobs_1','VRP_testing_05_jobs_2', 'VRP_testing_05_jobs_3','VRP_testing_05_jobs_4', 'VRP_testing_05_jobs_5','VRP_testing_10_jobs_1', 'VRP_testing_10_jobs_2', 'VRP_testing_10_jobs_3', 'VRP_testing_10_jobs_4', 'VRP_testing_10_jobs_5','VRP_testing_15_jobs_1', 'VRP_testing_15_jobs_2', 'VRP_testing_15_jobs_3', 'VRP_testing_15_jobs_4', 'VRP_testing_15_jobs_5','VRP_testing_20_jobs_1', 'VRP_testing_20_jobs_2', 'VRP_testing_20_jobs_3', 'VRP_testing_20_jobs_4', 'VRP_testing_20_jobs_5','VRP_testing_25_jobs_1', 'VRP_testing_25_jobs_2', 'VRP_testing_25_jobs_3', 'VRP_testing_25_jobs_4', 'VRP_testing_25_jobs_5']
