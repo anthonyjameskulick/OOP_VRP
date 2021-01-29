@@ -71,6 +71,7 @@ class VRP_Problem:
         self.shortcut_memo = {}
         self.labels_considered = 0
         self.b = 0
+        self.stopper = False
 
 #shared functions
     def reset_problem(self):
@@ -135,7 +136,7 @@ class VRP_Problem:
         self.shortcut_memo = {}
         self.labels_considered = 0
         self.b = 0
-    
+        self.stopper = False
         return
 
     def read_in_data(self, data, travel_times_multiplier):
@@ -1335,131 +1336,136 @@ class VRP_Problem:
             
             
     def retrace_optimal_path_VRP(self, memo: dict, n: int) -> [[int], float]:
-        points_to_retrace = tuple(range(self.number_of_jobs))    
-        full_path_memo = dict((k, v) for k, v in self.memo.items() if k[0] == points_to_retrace)
+        if self.stopper == True:
+            print(f"timed out no solution reached")
+            print(f"the time is {round(time.time() - self.t,3)}")
+            print(f"the memo length is {len(self.memo)}")
+        else:
+            points_to_retrace = tuple(range(self.number_of_jobs))    
+            full_path_memo = dict((k, v) for k, v in self.memo.items() if k[0] == points_to_retrace)
         
-        logging.debug(f"full path meemo = {full_path_memo}")
-        for x in full_path_memo:
-            logging.debug(f"x = {x}")
-            current_cost_vector = list(full_path_memo[x][0])
-            logging.debug(f"current cost vector = {current_cost_vector}")
-            for j in range(self.number_of_vehicles):
-                logging.debug(f"j = {j}")
-                logging.debug(f"current vehicle locations = {x[1]}")
-                logging.debug(f"current cost vector = {full_path_memo[x][0]}")
-                logging.debug(f"current location for vehicle {j} = {x[1][j]}")
-                current_cost_vector[j] = full_path_memo.get(x)[0][j]+self.distances_array[x[1][j]][0]
-                logging.debug(f"updated distances = {current_cost_vector}")
-                full_path_memo[x] = (tuple(current_cost_vector), full_path_memo.get(x)[1], full_path_memo.get(x)[2], full_path_memo.get(x)[3], full_path_memo.get(x)[4])
-                logging.debug(f"full path memo[{x}] = {full_path_memo[x]}")
-        logging.debug(f"updated cost full path memo = {full_path_memo}")     
-        #print(f"full path memo = {full_path_memo}")
+            logging.debug(f"full path meemo = {full_path_memo}")
+            for x in full_path_memo:
+                logging.debug(f"x = {x}")
+                current_cost_vector = list(full_path_memo[x][0])
+                logging.debug(f"current cost vector = {current_cost_vector}")
+                for j in range(self.number_of_vehicles):
+                    logging.debug(f"j = {j}")
+                    logging.debug(f"current vehicle locations = {x[1]}")
+                    logging.debug(f"current cost vector = {full_path_memo[x][0]}")
+                    logging.debug(f"current location for vehicle {j} = {x[1][j]}")
+                    current_cost_vector[j] = full_path_memo.get(x)[0][j]+self.distances_array[x[1][j]][0]
+                    logging.debug(f"updated distances = {current_cost_vector}")
+                    full_path_memo[x] = (tuple(current_cost_vector), full_path_memo.get(x)[1], full_path_memo.get(x)[2], full_path_memo.get(x)[3], full_path_memo.get(x)[4])
+                    logging.debug(f"full path memo[{x}] = {full_path_memo[x]}")
+            logging.debug(f"updated cost full path memo = {full_path_memo}")     
+            #print(f"full path memo = {full_path_memo}")
         
 
-        if len(full_path_memo) == 0: 
-            optimal_cost=None, 
-            optimal_path=None, 
-            self.df1=None
-        elif len(full_path_memo) !=0:
-            path_key = min(full_path_memo.keys(), key=lambda x: sum(full_path_memo[x][0])) 
-            logging.debug(f"path key = {path_key}")
-            last_point = path_key[1]
-            logging.debug(f"last point = {last_point}")
-            last_time = path_key[2]
-            logging.debug(f"last time = {last_time}")
-            key_version = path_key[3]
-            logging.debug(f"key version = {key_version}")
-            optimal_cost, prev_last_point, prev_last_time, vehicle_order, prev_key_version = full_path_memo.get(path_key)
-            logging.debug(f"optimal cost = {optimal_cost}")
-            logging.debug(f"prev last point = {prev_last_point}")
-            logging.debug(f"prev last time = {prev_last_time}")
-            logging.debug(f"vehicle order = {vehicle_order}")
-            logging.debug(f"prev key version = {prev_key_version}")
-            optimal_path = [[0] for i in range(self.number_of_vehicles)]
-            logging.debug(f"optimal path = {optimal_path}")
-            current_time_vector = [[] for i in range(self.number_of_vehicles)]
-            
-
-            for i in range(self.number_of_vehicles):
-                current_time_vector[i] = max(path_key[2][i], self.start_times[last_point[i]]) + self.service_times[last_point[i]]+self.travel_times_array[last_point[i]][0]
-                logging.debug(f"current time vector[{i} = {max(path_key[2][i], self.start_times[last_point[i]])} +{self.service_times[last_point[i]]}+ {self.travel_times_array[last_point[i]][0]} = {current_time_vector[i]}")
-            optimal_path_arrival_times = [[current_time_vector[i]] for i in vehicle_order]
-            logging.debug(f"optimal path arrival times = {optimal_path_arrival_times}")
-            
-
-            while len(points_to_retrace) != 0:
+            if len(full_path_memo) == 0: 
+                optimal_cost=None, 
+                optimal_path=None, 
+                self.df1=None
+            elif len(full_path_memo) !=0:
+                path_key = min(full_path_memo.keys(), key=lambda x: sum(full_path_memo[x][0])) 
+                logging.debug(f"path key = {path_key}")
                 last_point = path_key[1]
                 logging.debug(f"last point = {last_point}")
                 last_time = path_key[2]
                 logging.debug(f"last time = {last_time}")
                 key_version = path_key[3]
                 logging.debug(f"key version = {key_version}")
-                _, prev_last_point, prev_last_time, vehicle_order, prev_key_version = self.memo.get(path_key)
+                optimal_cost, prev_last_point, prev_last_time, vehicle_order, prev_key_version = full_path_memo.get(path_key)
+                logging.debug(f"optimal cost = {optimal_cost}")
                 logging.debug(f"prev last point = {prev_last_point}")
                 logging.debug(f"prev last time = {prev_last_time}")
                 logging.debug(f"vehicle order = {vehicle_order}")
-                logging.debug(f"last point = {last_point}")
-                logging.debug(f"prev last point = {prev_last_point}")
                 logging.debug(f"prev key version = {prev_key_version}")
-                
+                optimal_path = [[0] for i in range(self.number_of_vehicles)]
+                logging.debug(f"optimal path = {optimal_path}")
+                current_time_vector = [[] for i in range(self.number_of_vehicles)]
+            
+
                 for i in range(self.number_of_vehicles):
-                    if last_point[i] in prev_last_point:
-                        continue
-                    else:
-                        point_to_remove = last_point[i] #LEFTOFF HERE NOT ADDING POINTS TO THE CORRECT ROUTE
-                        logging.debug(f"point to remove = {point_to_remove}")
-                        optimal_path[vehicle_order[i]] = [point_to_remove] + optimal_path[vehicle_order[i]]
+                    current_time_vector[i] = max(path_key[2][i], self.start_times[last_point[i]]) + self.service_times[last_point[i]]+self.travel_times_array[last_point[i]][0]
+                    logging.debug(f"current time vector[{i} = {max(path_key[2][i], self.start_times[last_point[i]])} +{self.service_times[last_point[i]]}+ {self.travel_times_array[last_point[i]][0]} = {current_time_vector[i]}")
+                optimal_path_arrival_times = [[current_time_vector[i]] for i in vehicle_order]
+                logging.debug(f"optimal path arrival times = {optimal_path_arrival_times}")
+            
+
+                while len(points_to_retrace) != 0:
+                    last_point = path_key[1]
+                    logging.debug(f"last point = {last_point}")
+                    last_time = path_key[2]
+                    logging.debug(f"last time = {last_time}")
+                    key_version = path_key[3]
+                    logging.debug(f"key version = {key_version}")
+                    _, prev_last_point, prev_last_time, vehicle_order, prev_key_version = self.memo.get(path_key)
+                    logging.debug(f"prev last point = {prev_last_point}")
+                    logging.debug(f"prev last time = {prev_last_time}")
+                    logging.debug(f"vehicle order = {vehicle_order}")
+                    logging.debug(f"last point = {last_point}")
+                    logging.debug(f"prev last point = {prev_last_point}")
+                    logging.debug(f"prev key version = {prev_key_version}")
+                
+                    for i in range(self.number_of_vehicles):
+                        if last_point[i] in prev_last_point:
+                            continue
+                        else:
+                            point_to_remove = last_point[i] #LEFTOFF HERE NOT ADDING POINTS TO THE CORRECT ROUTE
+                            logging.debug(f"point to remove = {point_to_remove}")
+                            optimal_path[vehicle_order[i]] = [point_to_remove] + optimal_path[vehicle_order[i]]
+                            logging.debug(f"optimal path = {optimal_path}")
+                            optimal_path_arrival_times[vehicle_order[i]] = [last_time[i]] + optimal_path_arrival_times[vehicle_order[i]]
+                            logging.debug(f"optimal path arrival times = {optimal_path_arrival_times}")
+                            res1 = [i for i in points_to_retrace if i not in [point_to_remove]]
+                            points_to_retrace = tuple(sorted(res1))
+                            logging.debug(f"points to retrace = {points_to_retrace}")
+                            path_key = points_to_retrace, prev_last_point, prev_last_time, prev_key_version
+                            logging.debug(f"path key = {path_key}")
+                        
+                    if len(points_to_retrace) == 1: #this means 0 is the only point left to be assigned to routes
+                        logging.debug(f"points to retrace = {points_to_retrace}")
+                        for i in range(self.number_of_vehicles):
+                            optimal_path[i] = [0] + optimal_path[i]
+                            optimal_path_arrival_times[i] = [0]+optimal_path_arrival_times[i]
                         logging.debug(f"optimal path = {optimal_path}")
-                        optimal_path_arrival_times[vehicle_order[i]] = [last_time[i]] + optimal_path_arrival_times[vehicle_order[i]]
                         logging.debug(f"optimal path arrival times = {optimal_path_arrival_times}")
+                        point_to_remove = 0
                         res1 = [i for i in points_to_retrace if i not in [point_to_remove]]
                         points_to_retrace = tuple(sorted(res1))
                         logging.debug(f"points to retrace = {points_to_retrace}")
-                        path_key = points_to_retrace, prev_last_point, prev_last_time, prev_key_version
-                        logging.debug(f"path key = {path_key}")
-                        
-                if len(points_to_retrace) == 1: #this means 0 is the only point left to be assigned to routes
-                    logging.debug(f"points to retrace = {points_to_retrace}")
-                    for i in range(self.number_of_vehicles):
-                        optimal_path[i] = [0] + optimal_path[i]
-                        optimal_path_arrival_times[i] = [0]+optimal_path_arrival_times[i]
-                    logging.debug(f"optimal path = {optimal_path}")
-                    logging.debug(f"optimal path arrival times = {optimal_path_arrival_times}")
-                    point_to_remove = 0
-                    res1 = [i for i in points_to_retrace if i not in [point_to_remove]]
-                    points_to_retrace = tuple(sorted(res1))
-                    logging.debug(f"points to retrace = {points_to_retrace}")
                      
-        start1 = [[] for i in range(self.number_of_vehicles)]
-        logging.debug(f"start1 = {start1}")
-        end1 = [[] for i in range(self.number_of_vehicles)]
-        logging.debug(f"end1 = {end1}")
-        for j in range(self.number_of_vehicles):
-            start1[j] = [self.start_times[i] for i in optimal_path[j]] 
+            start1 = [[] for i in range(self.number_of_vehicles)]
             logging.debug(f"start1 = {start1}")
-            end1[j] = [self.end_times[i] for i in optimal_path[j]]
+            end1 = [[] for i in range(self.number_of_vehicles)]
             logging.debug(f"end1 = {end1}")
-        logging.debug(f"optimal path arrival times = {optimal_path_arrival_times}")
-        logging.debug(f"service times = {self.service_times}")
-        logging.debug(f"start 1 = {start1}")
+            for j in range(self.number_of_vehicles):
+                start1[j] = [self.start_times[i] for i in optimal_path[j]] 
+                logging.debug(f"start1 = {start1}")
+                end1[j] = [self.end_times[i] for i in optimal_path[j]]
+                logging.debug(f"end1 = {end1}")
+            logging.debug(f"optimal path arrival times = {optimal_path_arrival_times}")
+            logging.debug(f"service times = {self.service_times}")
+            logging.debug(f"start 1 = {start1}")
         
            
-        optimal_path_departure_times = [[] for i in range(self.number_of_vehicles)]
-        logging.debug(f"opt path depart = {optimal_path_departure_times}")
-        for i in range(self.number_of_vehicles):
-            logging.debug(f"for vehicle {i}:")
-            for j in range(len(optimal_path[i])):
-                logging.debug(f"for job {optimal_path[i]}")
-                optimal_path_departure_times[i] = optimal_path_departure_times[i] + [max(optimal_path_arrival_times[i][j]+self.service_times[optimal_path[i][j]], start1[i][j])]
-                logging.debug(f"opt path depart = {optimal_path_departure_times}")
-        logging.debug(f"optimal path departure times = {optimal_path_departure_times}")
+            optimal_path_departure_times = [[] for i in range(self.number_of_vehicles)]
+            logging.debug(f"opt path depart = {optimal_path_departure_times}")
+            for i in range(self.number_of_vehicles):
+                logging.debug(f"for vehicle {i}:")
+                for j in range(len(optimal_path[i])):
+                    logging.debug(f"for job {optimal_path[i]}")
+                    optimal_path_departure_times[i] = optimal_path_departure_times[i] + [max(optimal_path_arrival_times[i][j]+self.service_times[optimal_path[i][j]], start1[i][j])]
+                    logging.debug(f"opt path depart = {optimal_path_departure_times}")
+            logging.debug(f"optimal path departure times = {optimal_path_departure_times}")
             
-        self.optimal_cost = optimal_cost
-        self.optimal_path = optimal_path
-        print("time check:")
-        for i in range(self.number_of_vehicles):
-            self.df1 = pd.DataFrame({'opt path[i]': optimal_path[i], 'start[i]': start1[i], 'arrival': optimal_path_arrival_times[i], 'departure[i]': optimal_path_departure_times[i], 'end[i]': end1[i] })
-            print(f"{self.df1}")
+            self.optimal_cost = optimal_cost
+            self.optimal_path = optimal_path
+            print("time check:")
+            for i in range(self.number_of_vehicles):
+                self.df1 = pd.DataFrame({'opt path[i]': optimal_path[i], 'start[i]': start1[i], 'arrival': optimal_path_arrival_times[i], 'departure[i]': optimal_path_departure_times[i], 'end[i]': end1[i] })
+                print(f"{self.df1}")
         return self.optimal_path, self.optimal_cost
 
     def VRP_Solve(self, DUP, TW, SJA, WJA, JAU, DOM, T1, T2):
@@ -1469,9 +1475,14 @@ class VRP_Problem:
         self.queue = [(tuple([0]), tuple(self.prev_last_point), tuple(self.prev_time), self.key_version)]
         self.memo [tuple([0]), tuple(self.prev_last_point), tuple(self.prev_time), self.key_version] = (tuple([self.prev_dist, self.prev_last_point, self.prev_time, self.vehicle_order, self.prev_key_version])) 
         while self.queue:
+            
+            if (time.time() - self.t) > 3600:
+                self.stopper = True
+                break
+                  
             self.prev_visited, self.prev_last_point, self.prev_time, self.prev_key_version = self.queue.pop(0)
             logging.debug(f"extending label {self.prev_visited}, {self.prev_last_point}, {self.prev_time}, {self.prev_key_version}")
-            
+        
             self.prev_dist, _, _, self.vehicle_order, _ = self.memo[(tuple(self.prev_visited), tuple(self.prev_last_point), tuple(self.prev_time), self.prev_key_version)]
             logging.debug(f"previously visited set = {self.prev_visited}")
             logging.debug(f"previous last point = {self.prev_last_point}")
@@ -1479,10 +1490,10 @@ class VRP_Problem:
             logging.debug(f"previous distance = {self.prev_dist}")
             logging.debug(f"vehicle order = {self.vehicle_order}")
             to_visit = [i for i in self.all_points_set if i not in self.prev_visited]
-            
+        
             logging.debug(f"to visit set = {to_visit}")
             for i in range(self.number_of_vehicles):
-                
+            
                 logging.info(f"for vehicle {i}")
                 self.new_last_point[i-1] = self.prev_last_point[i-1]
                 self.new_dist[i-1] = self.prev_dist[i-1]
@@ -1496,7 +1507,7 @@ class VRP_Problem:
                     self.new_dist[i] = float(np.round(self.prev_dist[i] + self.distances_array[self.prev_last_point[i]][self.new_last_point[i]],2))
                     self.new_time[i] = float(np.round(max(self.prev_time[i], self.start_times[self.prev_last_point[i]]) + self.service_times[self.prev_last_point[i]] + self.travel_times_array[self.prev_last_point[i]][self.new_last_point[i]],2))
                     logging.info(f"checking the new label ({self.new_visited},{self.new_last_point},{self.new_time}) with distances {self.new_dist}")
-                    
+                
                     self.sorted_nlp, self.sorted_nt, self.sorted_nd, self.sorted_vo = zip(*sorted(zip(self.new_last_point, self.new_time, self.new_dist, self.vehicle_order)))
                     self.label_check = {k: v for k, v in self.memo.items() if k[0]==self.new_visited and k[1]==self.sorted_nlp}
                     if DUP:
@@ -1504,8 +1515,8 @@ class VRP_Problem:
                             continue
                     else:
                         logging.info(f"duplicate label check not being used")
-                    
-                   
+                
+               
                     if TW:
                         if not self.VRP_time_window_check():
                             continue
@@ -1515,17 +1526,17 @@ class VRP_Problem:
                     if SJA:
                         if not self.strong_jump_ahead_check():
                             continue
-                    
+                
                     else:
                         logging.info(f"strong jump ahead test is not being used.")
-                    
+                
                     if WJA:
                         if not self.weak_jump_ahead_check():
                             continue
-                    
+                
                     else:
                         logging.info(f"weak jump ahead test is not being used.")
-                    
+                
                     if JAU:
                         if not self.jump_ahead_update():
                             continue
@@ -1540,7 +1551,7 @@ class VRP_Problem:
                             continue           
                     else:
                         logging.info(f"test 2 is not being used")
-                    
+                
                     #self.shortcut_search()
                     if T1:                    
                         if not self.VRP_test1A():
@@ -1549,17 +1560,17 @@ class VRP_Problem:
 
                     else:
                         logging.info(f"test 1 is not being used")
-                    
+                
                     logging.info(f"tests ended")
                     #if len(self.new_visited) == 7:
-                        
+                    
                     if DOM:
                         self.VRP_dominance_test_update2()
                     else:
                         if (tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version) in self.queue:
                             while (tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version) in self.queue:
                                 self.key_version = self.key_version + 1
-                            
+                        
                             self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo, self.prev_key_version)
                             self.queue.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version))       
                         else:
@@ -1598,22 +1609,24 @@ class VRP_Problem:
             self.VRP_Solve(DUP, TW, SJA, WJA, JAU, DOM, T1, T2)
             #self.retrace_optimal_path_VRP(self.memo, self.number_of_jobs )
             self.run_time = round(time.time() - self.t, 3)
-        print(f"the memo length is {len(self.memo)}")
-        if self.number_of_vehicles == 1:
-            print(f"the length of the test 3 rejected labels is {self.test3_rejected_labels}")
-        print(f"Found optimal path in {self.run_time} seconds.") 
-        print(f"Optimal cost: {self.optimal_cost}, optimal path: {self.optimal_path}")
-        print(f"duplicate label check rejected {self.dup_lab_rejected} labels.")
-        print(f"time window check rejected {self.TW_rejected} labels.")
-        print(f"jump ahead check rejected {self.jump_ahead_rejected} labels.")
-        print(f"test 2 rejected {self.test2_rejected} labels.")
-        print(f"test 1 rejected {self.test1_rejected} labels.")
-        print(f"dominance check rejected {self.dom_lab_rejected} labels.")
-        print(f"{self.labels_considered} were considered")
+        if self.stopper == False:            
+            print(f"the memo length is {len(self.memo)}")
+            if self.number_of_vehicles == 1:
+                print(f"the length of the test 3 rejected labels is {self.test3_rejected_labels}")
+            print(f"Found optimal path in {self.run_time} seconds.") 
+            print(f"Optimal cost: {self.optimal_cost}, optimal path: {self.optimal_path}")
+            print(f"duplicate label check rejected {self.dup_lab_rejected} labels.")
+            print(f"time window check rejected {self.TW_rejected} labels.")
+            print(f"jump ahead check rejected {self.jump_ahead_rejected} labels.")
+            print(f"test 2 rejected {self.test2_rejected} labels.")
+            print(f"test 1 rejected {self.test1_rejected} labels.")
+            print(f"dominance check rejected {self.dom_lab_rejected} labels.")
+            print(f"{self.labels_considered} were considered")
+            
         return
 
     
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+#logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 a = VRP_Problem(number_of_vehicles = 2)
 
 names = ['VRP_testing_05_jobs_1','VRP_testing_05_jobs_2', 'VRP_testing_05_jobs_3','VRP_testing_05_jobs_4', 'VRP_testing_05_jobs_5','VRP_testing_10_jobs_1', 'VRP_testing_10_jobs_2', 'VRP_testing_10_jobs_3', 'VRP_testing_10_jobs_4', 'VRP_testing_10_jobs_5','VRP_testing_15_jobs_1', 'VRP_testing_15_jobs_2', 'VRP_testing_15_jobs_3', 'VRP_testing_15_jobs_4', 'VRP_testing_15_jobs_5','VRP_testing_20_jobs_1', 'VRP_testing_20_jobs_2', 'VRP_testing_20_jobs_3', 'VRP_testing_20_jobs_4', 'VRP_testing_20_jobs_5','VRP_testing_25_jobs_1', 'VRP_testing_25_jobs_2', 'VRP_testing_25_jobs_3', 'VRP_testing_25_jobs_4', 'VRP_testing_25_jobs_5']
@@ -1659,3 +1672,4 @@ for i in range(len(names)):
             print("this instance is skipped")
         else:
             a.Solver(read_in_data = True, data = names05[i], random_data = False, instances = 7, timeframe = 2000, locationframe = 100, servicetime = True, serviceframe = 25, travel_times_multiplier = 1, save_name = names[i], DUP = dup[j], TW = True, T1 = t1[j], T2 = t2[j], T3 = False, SJA = sja[j], WJA = False, JAU = False, DOM = dom[j])
+            print(f"###COMPLETE_RESULTS:, {names[i]}, {dup[j]}, {sja[j]}, {t1[j]}, {t2[j]}, {dom[j]}, {a.run_time}, {a.optimal_cost}, {a.optimal_path}, {len(a.memo)}")
