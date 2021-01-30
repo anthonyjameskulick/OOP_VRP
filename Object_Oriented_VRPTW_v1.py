@@ -1671,5 +1671,5 @@ for i in range(len(names)):
         elif dup[j] == False and sja[j] == False and t1[j] == True and t2[j] == True and dom[j] == False:
             print("this instance is skipped")
         else:
-            a.Solver(read_in_data = True, data = names05[i], random_data = False, instances = 7, timeframe = 2000, locationframe = 100, servicetime = True, serviceframe = 25, travel_times_multiplier = 1, save_name = names[i], DUP = dup[j], TW = True, T1 = t1[j], T2 = t2[j], T3 = False, SJA = sja[j], WJA = False, JAU = False, DOM = dom[j])
+            a.Solver(read_in_data = True, data = names[i], random_data = False, instances = 7, timeframe = 2000, locationframe = 100, servicetime = True, serviceframe = 25, travel_times_multiplier = 1, save_name = names[i], DUP = dup[j], TW = True, T1 = t1[j], T2 = t2[j], T3 = False, SJA = sja[j], WJA = False, JAU = False, DOM = dom[j])
             print(f"###COMPLETE_RESULTS:, {names[i]}, {dup[j]}, {sja[j]}, {t1[j]}, {t2[j]}, {dom[j]}, {a.run_time}, {a.optimal_cost}, {a.optimal_path}, {len(a.memo)}")
