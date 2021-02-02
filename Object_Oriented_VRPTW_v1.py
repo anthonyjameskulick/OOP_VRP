@@ -1223,7 +1223,6 @@ class VRP_Problem:
         else:    #possible dominated situation            
             dom_lab_keys = [key for key in dom_lab.keys()]
             #dom_lab_keys removes the values associated with each dictionary entry in the possibly dominated labels (dom_lab).
-            #what if two label have the same key, but different values?
             logging.debug(f"possible dominated label keys = {dom_lab_keys}")
             dom_lab_times = [dom_lab_keys[i][2] for i in range(len(dom_lab_keys))]
             #dom_lab_times strips away everything but the times
@@ -1264,7 +1263,7 @@ class VRP_Problem:
             if new_label_dominated:
                 logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt}) with costs {self.sorted_nd} is dominated by the existing label ({self.new_visited, self.sorted_nlp, dom_lab_times[dominator]}) with costs {dom_lab_dist[dominator]} so no new label is added.")
             
-                #when new_label_dominated is false the current label is not rejected because there is no existing label that totally dominates it.    
+            #when new_label_dominated is false the current label is not rejected because there is no existing label that totally dominates it.    
             else:
                 logging.info(f"no existing label completely dominates the current label.  Continue with other dominance tests")
                 #dom_check_2_time checks to see if the current label dominates the time for each vehicle for any existing label.
@@ -1272,7 +1271,7 @@ class VRP_Problem:
                 #dom_check_2_dist checks to see if the current label dominates the distance for each vehicle for any existing label.
                 dom_check_2_dist = [None for i in range(len(dom_lab))]
                 for i in range(len(dom_lab)):
-                    dom_check_2_time[i] = all(x == y for x, y in zip(self.sorted_nt, dom_lab_times[i]))
+                    dom_check_2_time[i] = all(x < y for x, y in zip(self.sorted_nt, dom_lab_times[i]))
                     dom_check_2_dist[i] = all(x <= y for x, y in zip(self.sorted_nd, dom_lab_dist[i]))
                     logging.debug(f"sorted_nt = {self.sorted_nt}")
                     logging.debug(f"dom lab times = {dom_lab_times[i]}")
@@ -1330,7 +1329,89 @@ class VRP_Problem:
                         self.queue.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version))
                         logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt, self.key_version}) with costs {self.sorted_nd} partially dominates at least one existing label so the current label is added.")
                         
+    def VRP_dominance_test_update3(self):
+        #we say that one label dominates another if each vehicle in a label arrives at the desired location at least as fast and at least as cheap as another label
+        #this test checks to see if the current label dominates any existing labels or if it dominates any current labels.
+        logging.info(f"starting dominance check:")
+        dom_lab = self.label_check
+        #dom_lab = self.label_check = {k: v for k, v in self.memo.items() if k[0]==self.new_visited and k[1]==self.sorted_nlp}.  
+        #These are the labels that could possibly dominate the current label or be dominated by the current label.
+        logging.debug(f"possible dominated labels = {dom_lab}")
+        if len(dom_lab) == 0: #no labels exist to dominate the current label
+            logging.info(f"no (S,V_i) label exists, {self.new_visited, self.sorted_nlp, self.sorted_nt, self.key_version} added") 
+            self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo, self.prev_key_version)
+            self.queue.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version))
+            
+        else:    #possible dominated situation            
+            dom_lab_keys = [key for key in dom_lab.keys()]
+            #dom_lab_keys removes the values associated with each dictionary entry in the possibly dominated labels (dom_lab).
+            logging.debug(f"possible dominated label keys = {dom_lab_keys}")
+            dom_lab_times = [dom_lab_keys[i][2] for i in range(len(dom_lab_keys))]
+            #dom_lab_times strips away everything but the times
+            dom_lab_times = [tuple(dom_lab_times[i]) for i in range(len(dom_lab_times))]
+            logging.debug(f"possible dominated label times = {dom_lab_times}")
+            #dom_lab_key_version = [dom_lab_keys[i][3] for i in range(len(dom_lab_keys))]
+            dom_lab_values = [value for value in dom_lab.values()]
+            #dom_lab_values removes the keys associated with each dictionary entry in the possibly dominated labels (dom_lab).
+            logging.debug(f"possible dominated label values = {dom_lab_values}")   
+            dom_lab_dist = [dom_lab_values[i][0] for i in range(len(dom_lab_values))]
+            dom_lab_dist = [tuple(dom_lab_dist[i]) for i in range(len(dom_lab_dist))]
+            #dom_lab_dist stips away everything but the costs 
+            logging.debug(f"possible dominated label distances = {dom_lab_dist}")          
+            #dom_check_#_time checks to see if there is an existing label that dominates the time for each vehicle for the current label
+            dom_check_1_time = [None for i in range(len(dom_lab))]
+            dom_check_2_time = [None for i in range(len(dom_lab))]
+            dom_check_3_time = [None for i in range(len(dom_lab))]
+            logging.debug(f"dom_check_1_time = {dom_check_1_time}")
+            #dom_check_#_dist checks to see if there is an existing label that dominates the distance for each vehicle for the current label
+            dom_check_1_dist = [None for i in range(len(dom_lab))]
+            dom_check_2_dist = [None for i in range(len(dom_lab))]
+            for i in range(len(dom_lab)):
+                dom_check_1_time[i] = all(x >= y for x, y in zip(self.sorted_nt, dom_lab_times[i]))
+                dom_check_1_dist[i] = all(x >= y for x, y in zip(self.sorted_nd, dom_lab_dist[i]))
+                dom_check_2_time[i] = all(x < y for x, y in zip(self.sorted_nt, dom_lab_times[i]))
+                dom_check_2_dist[i] = all(x <= y for x, y in zip(self.sorted_nd, dom_lab_dist[i]))                       
+            #dom_check_1 checks to see if there is an existing label that dominates both times and distances for the current label.    
+            dom_check_1 = False
+            for i in range(len(dom_lab)):
+                if dom_check_1_time[i] and dom_check_1_dist[i]:
+                    dom_check_1 = True
+                    dominator = i
+                else:
+                    continue
+            #dom_check_2 checks to see if the current label dominates both time and distance for an existing label.    
+            dom_check_2 = False
+            for i in range(len(dom_lab)):
+                if dom_check_2_time[i] and dom_check_2_dist[i]:
+                    dom_check_2 = True
+                    dominator = i
+                else:
+                    continue
+            #no labels are added or deleted if dom_check_1 is true because an existing label dominates the current one
+            if dom_check_1:
+                logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt}) with costs {self.sorted_nd} is dominated by the existing label ({self.new_visited, self.sorted_nlp, dom_lab_times[dominator]}) with costs {dom_lab_dist[dominator]} so no new label is added.")
+            #existing labels are deleted if dom_check_1 is true because the current label dominates those labels, the current label will be added later
+            elif dom_check_2:
+                for i in range(len(dom_lab)):
+                    if dom_check_2:
+                        logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt}) with costs {self.sorted_nd} dominates the existing label ({self.new_visited, self.sorted_nlp, dom_lab_times[i]}) with costs {dom_lab_dist[i]} so the existing label is deleted.")
+                        del self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(dom_lab_times[i]), dom_lab_keys[i][3])]
+                        self.queue.remove((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(dom_lab_times[i]), dom_lab_keys[i][3]))
+                        
+                    else:
+                        logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt, self.key_version}) with costs {self.sorted_nd} DOES NOT dominate the existing label ({self.new_visited, self.sorted_nlp, dom_lab_times[i]}) with costs {dom_lab_dist[i]} so the existing label is not deleted.")
+            #all other situations are 'incomplete dominance' so no labels are deleted and the current label will be added later.
+           #as long as the current label is not dominated it needs to be added, but this must be done carefull so as not to replace a non-dominated existing label
+            if not dom_check_1:
+                while (tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version) in dom_lab:
+                    self.key_version = self.key_version + 1                   
+                    logging.debug(f"key_version = {self.key_version}")
+                                
+                self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo, self.prev_key_version)
+                self.queue.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version))
+                logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt, self.key_version}) with costs {self.sorted_nd} is a duplicate label to some existing label, but with different values. So the current label is updated and added.")
 
+                
             
             
             
@@ -1565,7 +1646,7 @@ class VRP_Problem:
                     #if len(self.new_visited) == 7:
                     
                     if DOM:
-                        self.VRP_dominance_test_update2()
+                        self.VRP_dominance_test_update3()
                     else:
                         if (tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version) in self.queue:
                             while (tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version) in self.queue:
@@ -1636,9 +1717,7 @@ names15 = ['VRP_testing_15_jobs_1', 'VRP_testing_15_jobs_2', 'VRP_testing_15_job
 names20 = ['VRP_testing_20_jobs_1', 'VRP_testing_20_jobs_2', 'VRP_testing_20_jobs_3', 'VRP_testing_20_jobs_4', 'VRP_testing_20_jobs_5']
 names25 = ['VRP_testing_25_jobs_1', 'VRP_testing_25_jobs_2', 'VRP_testing_25_jobs_3', 'VRP_testing_25_jobs_4', 'VRP_testing_25_jobs_5']
 
-#for i in range(len(names05)): 
-    #a.Solver(read_in_data = True, data = names05[i], random_data = False, instances = 7, timeframe = 2000, locationframe = 100, servicetime = True, serviceframe = 25, travel_times_multiplier = 1, save_name = 'test', DUP = True, TW = True, T1 = True, T2 = True, T3 = False, SJA = True, WJA = False, JAU = False, DOM = True)
-    
+
 
 #wja = [False, False, True, False]
 #jau = [False, False, False, True]
@@ -1650,10 +1729,9 @@ sja = [False, True, False, True, False, True, False, True, False, True, False, T
 
 
 
-
 for i in range(len(names)):
     for j in range(len(dom)):    
-        print(f"data set = {names[i]}")
+        #print(f"data set = {names[i]}")
         print(f"TW = True")
         print(f"DUP = {dup[j]}")
         print(f"SJA = {sja[j]}")
