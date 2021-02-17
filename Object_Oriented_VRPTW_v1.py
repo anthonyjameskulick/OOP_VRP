@@ -1717,19 +1717,33 @@ names10 = ['VRP_testing_10_jobs_1', 'VRP_testing_10_jobs_2', 'VRP_testing_10_job
 names15 = ['VRP_testing_15_jobs_1', 'VRP_testing_15_jobs_2', 'VRP_testing_15_jobs_3', 'VRP_testing_15_jobs_4', 'VRP_testing_15_jobs_5']
 names20 = ['VRP_testing_20_jobs_1', 'VRP_testing_20_jobs_2', 'VRP_testing_20_jobs_3', 'VRP_testing_20_jobs_4', 'VRP_testing_20_jobs_5']
 names25 = ['VRP_testing_25_jobs_1', 'VRP_testing_25_jobs_2', 'VRP_testing_25_jobs_3', 'VRP_testing_25_jobs_4', 'VRP_testing_25_jobs_5']
-
+big_names = ['VRP_testing_15_jobs_1', 'VRP_testing_15_jobs_2', 'VRP_testing_15_jobs_3', 'VRP_testing_15_jobs_4', 'VRP_testing_15_jobs_5', 'VRP_testing_20_jobs_1', 'VRP_testing_20_jobs_2', 'VRP_testing_20_jobs_3', 'VRP_testing_20_jobs_4', 'VRP_testing_20_jobs_5', 'VRP_testing_25_jobs_1', 'VRP_testing_25_jobs_2', 'VRP_testing_25_jobs_3', 'VRP_testing_25_jobs_4', 'VRP_testing_25_jobs_5']
 
 #wja = [False, False, True, False]
 #jau = [False, False, False, True]
+t1 = [False, False, True, True]
+t2 = [False, True, False, True]
+for i in range(len(big_names)):
+    for j in {0,1,2}:
+        print(f"data set = {big_names[i]}")
+        print(f"TW = True")
+        print(f"DUP = True")
+        print(f"SJA = True")
+        print(f"DOM = True")
+        print(f"T1 = {t1[j]}")
+        print(f"T2 = {t2[j]}")
+        a.Solver(read_in_data = True, data = big_names[i], random_data = False, instances = 7, timeframe = 2000, locationframe = 100, servicetime = True, serviceframe = 25, travel_times_multiplier = 1, save_name = names[i], DUP = True, TW = True, T1 = t1[j], T2 = t2[j], T3 = False, SJA = True, WJA = False, JAU = False, DOM = True)
+        print(f"###COMPLETE_RESULTS:, {names[i]}, T1 = {t1[j]}, T2 = {t2[j]}, {a.run_time}, {a.optimal_cost}, {a.optimal_path}, {len(a.memo)}")
+        
 t1 = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True]
 t2 = [False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True]
 dom = [False, False, False, False, True, True, True, True, False, False, False, False, True, True, True, True, False, False, False, False, True, True, True, True, False, False, False, False, True, True, True, True]
 dup = [False, False, True, True, False, False, True, True, False, False, True, True, False, False, True, True, False, False, True, True, False, False, True, True, False, False, True, True, False, False, True, True]
 sja = [False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True]
 
+input()
 
-
-for i in range(len(names05)):
+for i in range(len(names)):
     for j in range(len(dom)):    
         print(f"data set = {names[i]}")
         print(f"TW = True")
