@@ -1559,9 +1559,9 @@ class VRP_Problem:
         counter = 0
         
         while self.queue:
-            #if (time.time() - self.t) > 3600:
-                #self.stopper = True
-                #break
+            if (time.time() - self.t) > 21600:
+                self.stopper = True
+                break
                   
             self.prev_visited, self.prev_last_point, self.prev_time, self.prev_key_version = self.queue.pop(0)
             logging.debug(f"extending label {self.prev_visited}, {self.prev_last_point}, {self.prev_time}, {self.prev_key_version}")
