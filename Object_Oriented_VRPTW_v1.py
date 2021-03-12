@@ -1556,15 +1556,19 @@ class VRP_Problem:
         self.special_values()
         self.queue = [(tuple([0]), tuple(self.prev_last_point), tuple(self.prev_time), self.key_version)]
         self.memo [tuple([0]), tuple(self.prev_last_point), tuple(self.prev_time), self.key_version] = (tuple([self.prev_dist, self.prev_last_point, self.prev_time, self.vehicle_order, self.prev_key_version])) 
+        counter = 0
+        
         while self.queue:
-            
-            if (time.time() - self.t) > 3600:
-                self.stopper = True
-                break
+            #if (time.time() - self.t) > 3600:
+                #self.stopper = True
+                #break
                   
             self.prev_visited, self.prev_last_point, self.prev_time, self.prev_key_version = self.queue.pop(0)
             logging.debug(f"extending label {self.prev_visited}, {self.prev_last_point}, {self.prev_time}, {self.prev_key_version}")
-        
+            if len(self.prev_visited) != counter:
+                print(f"progress check: {len(self.prev_visited)} cities of {self.number_of_jobs} cities visited, the running time is {time.time() - self.t}, and {len(self.memo)} labels have been created")
+                counter = counter + 1
+                #input()
             self.prev_dist, _, _, self.vehicle_order, _ = self.memo[(tuple(self.prev_visited), tuple(self.prev_last_point), tuple(self.prev_time), self.prev_key_version)]
             logging.debug(f"previously visited set = {self.prev_visited}")
             logging.debug(f"previous last point = {self.prev_last_point}")
@@ -1572,7 +1576,7 @@ class VRP_Problem:
             logging.debug(f"previous distance = {self.prev_dist}")
             logging.debug(f"vehicle order = {self.vehicle_order}")
             to_visit = [i for i in self.all_points_set if i not in self.prev_visited]
-        
+            
             logging.debug(f"to visit set = {to_visit}")
             for i in range(self.number_of_vehicles):
             
@@ -1724,7 +1728,7 @@ big_names = ['VRP_testing_15_jobs_1', 'VRP_testing_15_jobs_2', 'VRP_testing_15_j
 t1 = [False, False, True, True]
 t2 = [False, True, False, True]
 for i in range(len(big_names)):
-    for j in {0,1,2}:
+    for j in {0,1,2,3}:
         print(f"data set = {big_names[i]}")
         print(f"TW = True")
         print(f"DUP = True")
