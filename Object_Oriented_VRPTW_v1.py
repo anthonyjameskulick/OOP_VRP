@@ -7,6 +7,9 @@ import pandas as pd
 import logging
 import copy
 import math
+import cProfile, pstats, io
+from pstats import SortKey
+
 
 class VRP_Problem:
     def __init__(self, number_of_vehicles):
@@ -1559,7 +1562,7 @@ class VRP_Problem:
         counter = 0
         
         while self.queue:
-            if (time.time() - self.t) > 21600:
+            if (time.time() - self.t) > 3600:
                 self.stopper = True
                 break
                   
@@ -1736,8 +1739,16 @@ for i in range(len(big_names)):
         print(f"DOM = True")
         print(f"T1 = {t1[j]}")
         print(f"T2 = {t2[j]}")
-        a.Solver(read_in_data = True, data = big_names[i], random_data = False, instances = 7, timeframe = 2000, locationframe = 100, servicetime = True, serviceframe = 25, travel_times_multiplier = 1, save_name = names[i], DUP = True, TW = True, T1 = t1[j], T2 = t2[j], T3 = False, SJA = True, WJA = False, JAU = False, DOM = True)
+        pr = cProfile.Profile()
+        pr.enable()
+        a.Solver(read_in_data = True, data = big_names[i], random_data = False, instances = 7, timeframe = 2000, locationframe = 100, servicetime = True, serviceframe = 25, travel_times_multiplier = 1, save_name = big_names[i], DUP = True, TW = True, T1 = t1[j], T2 = t2[j], T3 = False, SJA = True, WJA = False, JAU = False, DOM = True)
         print(f"###COMPLETE_RESULTS:, {names[i]}, T1 = {t1[j]}, T2 = {t2[j]}, {a.run_time}, {a.optimal_cost}, {a.optimal_path}, {len(a.memo)}")
+        pr.disable()
+        s = io.StringIO()
+        sortby = SortKey.CUMULATIVE
+        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+        ps.print_stats(.1)
+        print(s.getvalue())
         
 t1 = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True]
 t2 = [False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True]
