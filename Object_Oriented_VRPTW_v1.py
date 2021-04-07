@@ -1537,9 +1537,9 @@ class VRP_Problem:
                     
                     for i in dominated:
                         logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt}) with costs {self.sorted_nd} dominates the existing label ({self.new_visited, self.sorted_nlp, self.prefix_label_times[i]}) with costs {self.prefix_label_dist[i]} so the existing label is deleted.")
-                        del self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.prefix_label_times[i]), dom_lab_keys[i][3])]
-                        self.queue.remove((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.prefix_label_times[i]), dom_lab_keys[i][3]))
-                        temp.remove((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.prefix_label_times[i]), dom_lab_keys[i][3]))
+                        del self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.prefix_label_times[i]), self.prefix_labels[i][3])]
+                        self.queue.remove((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.prefix_label_times[i]), self.prefix_labels[i][3]))
+                        temp.remove((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.prefix_label_times[i]), self.prefix_labels[i][3]))
                     logging.debug(f"temp = {temp}")
                     self.prefix_memo[(tuple(self.new_visited), tuple(self.sorted_nlp))] = temp
                     logging.debug(f"prefix_memo = {self.prefix_memo}")
@@ -1923,9 +1923,9 @@ big_names = ['VRP_testing_15_jobs_1', 'VRP_testing_15_jobs_2', 'VRP_testing_15_j
 #jau = [False, False, False, True]
 t1 = [False, False, True, True]
 t2 = [False, True, False, True]
-for i in range(len(names10)):
+for i in range(len(names05)):
     for j in {0,1,2,3}:
-        print(f"data set = {names10[i]}")
+        print(f"data set = {names[i]}")
         print(f"TW = True")
         print(f"DUP = True")
         print(f"SJA = True")
@@ -1934,8 +1934,8 @@ for i in range(len(names10)):
         print(f"T2 = {t2[j]}")
         pr = cProfile.Profile()
         pr.enable()
-        a.Solver(read_in_data = True, data = names10[i], random_data = False, instances = 7, timeframe = 2000, locationframe = 100, servicetime = True, serviceframe = 25, travel_times_multiplier = 1, save_name = big_names[i], DUP = True, TW = True, T1 = t1[j], T2 = t2[j], T3 = False, SJA = True, WJA = False, JAU = False, DOM = True)
-        print(f"###COMPLETE_RESULTS:, {names10[i]}, T1 = {t1[j]}, T2 = {t2[j]}, {a.run_time}, {a.optimal_cost}, {a.optimal_path}, {len(a.memo)}")
+        a.Solver(read_in_data = True, data = names05[i], random_data = False, instances = 7, timeframe = 2000, locationframe = 100, servicetime = True, serviceframe = 25, travel_times_multiplier = 1, save_name = big_names[i], DUP = True, TW = True, T1 = t1[j], T2 = t2[j], T3 = False, SJA = True, WJA = False, JAU = False, DOM = True)
+        print(f"###COMPLETE_RESULTS:, {names05[i]}, T1 = {t1[j]}, T2 = {t2[j]}, {a.run_time}, {a.optimal_cost}, {a.optimal_path}, {len(a.memo)}")
         pr.disable()
         s = io.StringIO()
         sortby = SortKey.CUMULATIVE
