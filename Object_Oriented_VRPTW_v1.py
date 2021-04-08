@@ -1522,10 +1522,11 @@ class VRP_Problem:
             for i in range(len(dom_lab)):
                 if dom_check_2_time[i] and dom_check_2_dist[i]:
                     dom_check_2 = True
-                    dominated = dominated + [i]
+                    dominated = dominated + [self.prefix_labels[i]]
                 else:
                     continue
             logging.debug(f"dom_check_2 = {dom_check_2}")
+            logging.debug(f"dominated = {dominated}")
             #no labels are added or deleted if dom_check_1 is true because an existing label dominates the current one
             if dom_check_1:
                 logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt}) with costs {self.sorted_nd} is dominated by the existing label ({self.new_visited, self.sorted_nlp, self.prefix_label_times[dominator]}) with costs {self.prefix_label_dist[dominator]} so no new label is added.")
@@ -1536,10 +1537,11 @@ class VRP_Problem:
                     logging.debug(f"temp = {temp}")
                     
                     for i in dominated:
-                        logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt}) with costs {self.sorted_nd} dominates the existing label ({self.new_visited, self.sorted_nlp, self.prefix_label_times[i]}) with costs {self.prefix_label_dist[i]} so the existing label is deleted.")
-                        del self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.prefix_label_times[i]), self.prefix_labels[i][3])]
-                        self.queue.remove((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.prefix_label_times[i]), self.prefix_labels[i][3]))
-                        temp.remove((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.prefix_label_times[i]), self.prefix_labels[i][3]))
+                        logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt}) with costs {self.sorted_nd} dominates the existing label {i} with costs {self.memo[i][0]} so the existing label is deleted.")
+                        #logging.info(f"prefix_label[{i}] = {self.prefix_labels[i]}")
+                        del self.memo[i]
+                        self.queue.remove(i)
+                        temp.remove(i)
                     logging.debug(f"temp = {temp}")
                     self.prefix_memo[(tuple(self.new_visited), tuple(self.sorted_nlp))] = temp
                     logging.debug(f"prefix_memo = {self.prefix_memo}")
@@ -1923,7 +1925,7 @@ big_names = ['VRP_testing_15_jobs_1', 'VRP_testing_15_jobs_2', 'VRP_testing_15_j
 #jau = [False, False, False, True]
 t1 = [False, False, True, True]
 t2 = [False, True, False, True]
-for i in range(len(names05)):
+for i in range(len(names15)):
     for j in {0,1,2,3}:
         print(f"data set = {names[i]}")
         print(f"TW = True")
@@ -1934,8 +1936,8 @@ for i in range(len(names05)):
         print(f"T2 = {t2[j]}")
         pr = cProfile.Profile()
         pr.enable()
-        a.Solver(read_in_data = True, data = names05[i], random_data = False, instances = 7, timeframe = 2000, locationframe = 100, servicetime = True, serviceframe = 25, travel_times_multiplier = 1, save_name = big_names[i], DUP = True, TW = True, T1 = t1[j], T2 = t2[j], T3 = False, SJA = True, WJA = False, JAU = False, DOM = True)
-        print(f"###COMPLETE_RESULTS:, {names05[i]}, T1 = {t1[j]}, T2 = {t2[j]}, {a.run_time}, {a.optimal_cost}, {a.optimal_path}, {len(a.memo)}")
+        a.Solver(read_in_data = True, data = names15[i], random_data = False, instances = 7, timeframe = 2000, locationframe = 100, servicetime = True, serviceframe = 25, travel_times_multiplier = 1, save_name = big_names[i], DUP = True, TW = True, T1 = t1[j], T2 = t2[j], T3 = False, SJA = True, WJA = False, JAU = False, DOM = True)
+        print(f"###COMPLETE_RESULTS:, {names15[i]}, T1 = {t1[j]}, T2 = {t2[j]}, {a.run_time}, {a.optimal_cost}, {a.optimal_path}, {len(a.memo)}")
         pr.disable()
         s = io.StringIO()
         sortby = SortKey.CUMULATIVE
