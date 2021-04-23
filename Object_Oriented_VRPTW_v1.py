@@ -738,22 +738,6 @@ class VRP_Problem:
             logging.debug(f"prefix_memo = {self.prefix_memo}")
            
         else:    #possible dominated situation            
-            #dom_lab_keys = [key for key in dom_lab.keys()]
-            #dom_lab_keys removes the values associated with each dictionary entry in the possibly dominated labels (dom_lab).
-            #logging.debug(f"possible dominated label keys = {dom_lab_keys}")
-            #dom_lab_times = [dom_lab_keys[i][2] for i in range(len(dom_lab_keys))]
-            #dom_lab_times strips away everything but the times
-            #dom_lab_times = [tuple(dom_lab_times[i]) for i in range(len(dom_lab_times))]
-            #logging.debug(f"possible dominated label times = {dom_lab_times}")
-            #dom_lab_key_version = [dom_lab_keys[i][3] for i in range(len(dom_lab_keys))]
-            #dom_lab_values = [value for value in dom_lab.values()]
-            #dom_lab_values removes the keys associated with each dictionary entry in the possibly dominated labels (dom_lab).
-            #logging.debug(f"possible dominated label values = {dom_lab_values}")   
-            #dom_lab_dist = [dom_lab_values[i][0] for i in range(len(dom_lab_values))]
-            #dom_lab_dist = [tuple(dom_lab_dist[i]) for i in range(len(dom_lab_dist))]
-            #dom_lab_dist stips away everything but the costs 
-            #logging.debug(f"possible dominated label distances = {dom_lab_dist}")          
-            #dom_check_#_time checks to see if there is an existing label that dominates the time for each vehicle for the current label
             dom_check_1_time = [None for i in range(len(dom_lab))]
             dom_check_2_time = [None for i in range(len(dom_lab))]
             dom_check_3_time = [None for i in range(len(dom_lab))]
@@ -798,7 +782,6 @@ class VRP_Problem:
                     
                     for i in dominated:
                         logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt}) with costs {self.sorted_nd} dominates the existing label {i} with costs {self.memo[i][0]} so the existing label is deleted.")
-                        #logging.info(f"prefix_label[{i}] = {self.prefix_labels[i]}")
                         del self.memo[i]
                         self.queue.remove(i)
                         temp.remove(i)
@@ -823,12 +806,10 @@ class VRP_Problem:
                     temp.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version))
                     logging.debug(f"temp = {temp}")
                     self.prefix_memo[(tuple(self.new_visited), tuple(self.sorted_nlp))] = temp
-                    logging.debug(f"prefix_memo = {self.prefix_memo}")
-                    
+                    logging.debug(f"prefix_memo = {self.prefix_memo}")                    
                 else:
                     self.prefix_memo[(tuple(self.new_visited), tuple(self.sorted_nlp))] = [(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)]
                     logging.debug(f"prefix_memo = {self.prefix_memo}")
-                    
                 logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt, self.key_version}) with costs {self.sorted_nd} is a duplicate label to some existing label, but with different values. So the current label is updated and added.")
         return
        
