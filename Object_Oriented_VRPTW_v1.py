@@ -7,6 +7,10 @@ import pandas as pd
 import logging
 import copy
 import math
+import cProfile, pstats, io
+from pstats import SortKey
+from queue import Queue
+
 
 class VRP_Problem:
     def __init__(self, number_of_vehicles):
@@ -17,7 +21,11 @@ class VRP_Problem:
         self.end_times = []
         self.service_times = []
         self.memo = {}
-        self.queue = []
+        self.prefix_memo = {}
+        self.prefix_labels = []
+        self.prefix_label_times = None
+        self.prefix_label_dist = None
+        self.queue = Queue(maxsize = 0)
         self.test3_restricted_labels = {}
         self.distances_array = []
         self.travel_times_array = []
@@ -45,6 +53,8 @@ class VRP_Problem:
             self.new_last_point = [0 for i in range(self.number_of_vehicles)]
             self.new_time = [0 for i in range(self.number_of_vehicles)]
             self.new_dist = [0 for i in range(self.number_of_vehicles)]
+            self.key_version = 0
+            self.prev_key_version = 0
         #self.first = None
         self.first = [0 for i in range(self.number_of_vehicles)]
         self.all_points_set = []
@@ -69,6 +79,7 @@ class VRP_Problem:
         self.shortcut_memo = {}
         self.labels_considered = 0
         self.b = 0
+        self.stopper = False
 
 #shared functions
     def reset_problem(self):
@@ -79,7 +90,11 @@ class VRP_Problem:
         self.end_times = []
         self.service_times = []
         self.memo = {}
-        self.queue = []
+        self.prefix_memo = {}
+        self.prefix_labels = []
+        self.prefix_label_times = None
+        self.prefix_label_dist = None
+        self.queue = Queue(maxsize = 0)
         self.test3_restricted_labels = {}
         self.distances_array = []
         self.travel_times_array = []
@@ -104,6 +119,8 @@ class VRP_Problem:
             self.prev_last_point = [0 for i in range(self.number_of_vehicles)] #0 is the depot location
             self.prev_time = [0 for i in range(self.number_of_vehicles)]
             self.prev_dist = [0 for i in range(self.number_of_vehicles)]
+            self.prev_key_version = 0
+            self.key_version = 0
             self.new_last_point = [0 for i in range(self.number_of_vehicles)]
             self.new_time = [0 for i in range(self.number_of_vehicles)]
             self.new_dist = [0 for i in range(self.number_of_vehicles)]
@@ -131,7 +148,7 @@ class VRP_Problem:
         self.shortcut_memo = {}
         self.labels_considered = 0
         self.b = 0
-    
+        self.stopper = False
         return
 
     def read_in_data(self, data, travel_times_multiplier):
@@ -346,20 +363,20 @@ class VRP_Problem:
             if (self.new_time <= self.first) and (self.new_dist <= self.memo[(self.new_visited, self.new_last_point, self.first)][0]): #time and cost improvement, replace label
                 del self.memo[(self.new_visited, self.new_last_point, self.first)]
                 self.memo[(self.new_visited, self.new_last_point, self.new_time)] = (self.new_dist, self.prev_last_point, self.prev_time)
-                self.queue.remove((self.new_visited, self.new_last_point, self.first))
-                self.queue += [(self.new_visited, self.new_last_point, self.new_time)]
+                #self.queue.remove((self.new_visited, self.new_last_point, self.first))
+                self.queue.put((self.new_visited, self.new_last_point, self.new_time))
                 logging.info(f"label ({self.new_visited}, {self.new_last_point}, {self.new_time}) dominated, case 1, replaces label ({self.new_visited},{self.new_last_point},{self.first})")
             elif (self.new_time == self.first) and (self.new_dist < self.memo[(self.new_visited, self.new_last_point, self.first)][0]): #same time, cost improvement, replace old label with new
                 self.memo[(self.new_visited, self.new_last_point, self.first)] = (self.new_dist, self.prev_last_point, self.prev_time)
-                self.queue += [(self.new_visited, self.new_last_point, self.new_time)]
+                self.queue.put((self.new_visited, self.new_last_point, self.new_time))
                 logging.info(f"label ({self.new_visited}, {self.new_last_point}, {self.new_time}) dominated, case 2, same time, better distance, updates old label with new distance")
             elif (self.new_time < self.first) and (self.new_dist >= self.memo[(self.new_visited, self.new_last_point, self.first)][0]): #time improvement only, add new label
                 self.memo[(self.new_visited, self.new_last_point, self.new_time)] = (self.new_dist, self.prev_last_point, self.prev_time)
-                self.queue += [(self.new_visited, self.new_last_point, self.new_time)]
+                self.queue.put((self.new_visited, self.new_last_point, self.new_time))
                 logging.info(f"label ({self.new_visited}, {self.new_last_point}, {self.new_time}) dominated, case 3, better time, worse cost, adds label")
             elif (self.new_time >= self.first) and (self.new_dist  < self.memo[(self.new_visited, self.new_last_point, self.first)][0]): #cost improvement only, add new label
                 self.memo[(self.new_visited, self.new_last_point, self.new_time)] = (self.new_dist, self.prev_last_point, self.prev_time)
-                self.queue += [(self.new_visited, self.new_last_point, self.new_time)]
+                self.queue.put((self.new_visited, self.new_last_point, self.new_time))
                 logging.info(f"label ({self.new_visited}, {self.new_last_point}, {self.new_time}) dominated, case 4, slower time, better cost, adds label")
             else:
                 logging.info(f"label ({self.new_visited}, {self.new_last_point}, {self.new_time}) dominated, case 5, no label created")
@@ -367,7 +384,7 @@ class VRP_Problem:
                 #queue += [(new_visited, new_last_point, new_time)]                 
         else: #len({k: v for k, v in memo.items() if k[0]==new_visited and k[1]==new_last_point}) == 0: #new label
             self.memo[(self.new_visited, self.new_last_point, self.new_time)] = (self.new_dist, self.prev_last_point, self.prev_time)
-            self.queue += [(self.new_visited, self.new_last_point, self.new_time)]
+            self.queue.put((self.new_visited, self.new_last_point, self.new_time))
             logging.info(f"no (S,i) label exists, {self.new_visited, self.new_last_point, self.new_time} added") 
         logging.debug(f"the queue is {self.queue}")
         logging.debug(f"the memo is {self.memo}")
@@ -416,9 +433,12 @@ class VRP_Problem:
         self.special_values()
         
         self.memo = {(tuple([i]), i, 0): tuple([0, None, 0]) for i in range(self.number_of_jobs)} 
-        self.queue = [(tuple([i]), i, 0) for i in range(self.number_of_jobs)]
-        while self.queue: 
-            self.prev_visited, self.prev_last_point, self.prev_time = self.queue.pop(0)
+        for i in range(self.number_of_jobs):
+            self.queue.put((tuple([i]), i, 0))
+        while self.queue.qsize() != 0: 
+            self.prev_visited, self.prev_last_point, self.prev_time = self.queue.get()
+            while self.memo.get((self.prev_visited, self.prev_last_point, self.prev_time)) == None:
+                self.prev_visited, self.prev_last_point, self.prev_time = self.queue.get()
             self.prev_dist, _, _ = self.memo[(self.prev_visited, self.prev_last_point, self.prev_time)]
             logging.info(f"extending from ({self.prev_visited}, {self.prev_last_point}, {self.prev_time})")
             to_visit = [i for i in all_points_set if i not in self.prev_visited]
@@ -462,48 +482,22 @@ class VRP_Problem:
                 logging.info(f"tests ended")
 
                 self.dominance_test()
-                
 
-        #end while
         self.optimal_path, self.optimal_cost = self.retrace_optimal_path_TSPTW(self.memo, self.number_of_jobs)
     
         return self.optimal_path, self.optimal_cost, self.df1
 
 #VRPTW functions
 #this checks to see if the exact same label is already in the memo, if so, the current label is abandoned otherwise the other checks proceed
-    def duplicate_label_check_VRP(self):
-        #sorted_nlp, sorted_nt, sorted_nd, sorted_vo = zip(*sorted(zip(self.new_last_point, self.new_time, self.new_dist, self.vehicle_order)))
-        dup_label_check = {k: v for k, v in self.label_check.items() if k[0]==self.new_visited and k[1]==self.sorted_nlp and k[2]==self.sorted_nt}
-        logging.info(f"starting duplicate label check for label ({dup_label_check}, {self.sorted_nlp}, {self.sorted_nt}) with values ({self.sorted_nd}, {self.prev_last_point}, {self.prev_time}, _):")
-        
-        if len(dup_label_check) == 0:
-            dup_lab_check = True
-            logging.info(f"the label ({self.new_visited}, {self.sorted_nlp}, {self.sorted_nt}) IS NOT a duplicate label")
-        else:
-            #test_sorted_nd, test_prev_last_point, test_prev_time, _ = self.memo.get((self.new_visited, sorted_nlp, sorted_nt)) #do I need all of these for a duplicate label ... would just the same distance be enough?
-            test_sorted_nd, _, _, _ = dup_label_check.get((self.new_visited, self.sorted_nlp, self.sorted_nt))
-            logging.debug(f"test sorted new distance = {test_sorted_nd} and sorted new distance = {self.sorted_nd}")
-            #logging.debug(f"test prev last point = {test_prev_last_point} and prev last point = {self.prev_last_point}")
-            #logging.debug(f"test prev time = {test_prev_time} and prev time = {self.prev_time}")
-            if test_sorted_nd == self.sorted_nd: #and test_prev_last_point == self.prev_last_point and test_prev_time == self.prev_time:
-                dup_lab_check = False
-                logging.info(f"the label ({self.new_visited}, {self.sorted_nlp}, {self.sorted_nt}) IS a duplicate label")
-            else:
-                dup_lab_check = True
-                logging.info(f"the label ({self.new_visited}, {self.sorted_nlp}, {self.sorted_nt}) IS NOT a duplicate label")
-        if dup_lab_check == False:
-            self.dup_lab_rejected = self.dup_lab_rejected + 1
-        return dup_lab_check
-        
     def duplicate_label_check_VRP_update2(self):
         logging.info(f"starting duplicate label check")
         #first check to see if the current label is stored in the memo or rejected labels dictionaries with a cost equal to the current cost.
-        if ((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)) in self.memo) or ((self.new_visited, self.sorted_nlp, self.sorted_nt) in self.rejected_labels):
-            if (tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)) in self.memo:
-                costcheck, _, _, _ = self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))]
+        if ((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version) in self.memo) or ((self.new_visited, self.sorted_nlp, self.sorted_nt, self.key_version) in self.rejected_labels):
+            if (tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version) in self.memo:
+                costcheck, _, _, _, _ = self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)]
                 logging.debug(f"costcheck_memo = {costcheck}")
-            elif (self.new_visited, self.sorted_nlp, self.sorted_nt) in self.rejected_labels:
-                costcheck = self.rejected_labels[(self.new_visited, self.sorted_nlp, self.sorted_nt)]
+            elif (self.new_visited, self.sorted_nlp, self.sorted_nt, self.key_version) in self.rejected_labels:
+                costcheck = self.rejected_labels[(self.new_visited, self.sorted_nlp, self.sorted_nt, self.key_version)]
                 logging.debug(f"costcheck_reject = {costcheck}")
             else:
                 costcheck = -1
@@ -511,13 +505,13 @@ class VRP_Problem:
             
             if tuple(self.sorted_nd) == tuple(costcheck):
                 dup_lab_check = False
-                logging.info(f"the label {(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))} is a duplicate")
+                logging.info(f"the label {(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)} is a duplicate")
                 self.dup_lab_rejected = self.dup_lab_rejected + 1
             else:
                 dup_lab_check = True
         else:
             dup_lab_check = True
-            logging.info(f"the label {(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))} HAS NOT already been encountered")
+            logging.info(f"the label {(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)} HAS NOT already been encountered")
         logging.info(f"duplicate label check ended.")
         return dup_lab_check 
 
@@ -611,28 +605,6 @@ class VRP_Problem:
                 dup_lab_check = True
         return dup_lab_check
         
-    
-    def weak_jump_ahead_check(self):
-        ja_check = True
-        logging.debug(f"new visited = {self.new_visited}, new last point = {self.sorted_nlp}")
-        remaining_jobs = [i for i in self.all_points_set  if i not in self.new_visited]
-        logging.debug(f"remaining jobs = {remaining_jobs}")
-        if len(remaining_jobs) == 0:
-            pass
-        else:
-            for i in self.sorted_nlp:
-                for j in remaining_jobs:
-                    logging.debug(f"self.start_times[{i}] = {self.start_times[i]} and self.end_times[{j}] = {self.end_times[j]}")
-                    if self.start_times[i]-500>self.end_times[j]:
-                        ja_check = False
-        if ja_check == False:
-            self.jump_ahead_rejected = self.jump_ahead_rejected + 1
-            #self.rejected_labels.add((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
-            logging.info(f"jump ahead check failed")
-        else:
-            logging.info(f"jump ahead check passed")
-        return ja_check
-
     def VRP_time_window_check(self):
         logging.info(f"start TW check")  
         for i in range(self.number_of_vehicles):
@@ -648,6 +620,7 @@ class VRP_Problem:
         logging.debug(f"TW = {self.TW}")
         if False in self.TW:
             TW_test = False
+            self.rejected_labels[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)] = list(self.sorted_nd)
         else:
             TW_test = True
         logging.info(f"time window test = {TW_test}")
@@ -668,46 +641,6 @@ class VRP_Problem:
                         ja_check = False
         if ja_check == False:
             self.jump_ahead_rejected = self.jump_ahead_rejected + 1
-            #self.rejected_labels.add((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
-            logging.info(f"jump ahead check failed")
-        else:
-            logging.info(f"jump ahead check passed")
-        return ja_check
-
-    def jump_ahead_update(self):
-        #start_time_test = [None for i in range(len(self.number_of_vehicles))]
-        #current_start_times = [self.start_times[self.sorted_nlp[i]] for i in range(len(self.number_of_vehicles))]
-        #logging.debug(f"current locations {self.sorted_nlp}")
-        #logging.debug(f"all start times {self.start_times}")
-        #logging.debug(f"current start times {current_start_times}")
-        #if all(x >= y for x,y in zip(self.sorted_nt,current_start_times)):
-            #ja_check = True
-        #for i in range(len(self.number_of_vehicles)):
-            #if current_start_times[i] <= self.sorted_nt[i]:
-                #start_time_test[i] = True
-            #else:
-                #start_time_test[i] = False
-        #logging.debug(f"start time test {start_time_test}")
-        #if all(start_time_test):
-            #ja_check = True
-        #if not any(start_time_test):
-            #ja_check = False
-
-        ja_check = True
-        logging.debug(f"new visited = {self.new_visited}, new last point = {self.sorted_nlp}")
-        remaining_jobs = [i for i in self.all_points_set  if i not in self.new_visited]
-        logging.debug(f"remaining jobs = {remaining_jobs}")
-        if len(remaining_jobs) == 0:
-            pass
-        else:
-            for i in self.sorted_nlp:
-                for j in remaining_jobs:
-                    logging.debug(f"self.start_times[{i}] = {self.start_times[i]} and self.end_times[{j}] = {self.end_times[j]}")
-                    if self.end_times[i]>self.end_times[j] and self.start_times[i]>self.start_times[j]:
-                        ja_check = False
-        if ja_check == False:
-            self.jump_ahead_rejected = self.jump_ahead_rejected + 1
-            #self.rejected_labels.add((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
             logging.info(f"jump ahead check failed")
         else:
             logging.info(f"jump ahead check passed")
@@ -715,7 +648,7 @@ class VRP_Problem:
 
     def before_VRP(self):
         Y = [self.dumas_before_sets[x] for x in self.sorted_nlp]
-        self.VRP_before_set = set(Y[0]).intersection(*Y) #come back to this
+        self.VRP_before_set = set(Y[0]).intersection(*Y) 
         return self.VRP_before_set
 
     def VRP_test2(self):
@@ -733,54 +666,21 @@ class VRP_Problem:
             logging.info(f"({self.new_visited}, {self.sorted_nlp}, {self.sorted_nt}) fails test 2")
         if test2 == False:
             self.test2_rejected = self.test2_rejected + 1
-            self.rejected_labels[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))]=self.sorted_nd
+            self.rejected_labels[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)]=list(self.sorted_nd)
         return test2
 
-    def shortcut_search(self):
-        self.label_check.clear()
-        logging.debug(f"start shortcut search")
-        search_times = self.shortcut_memo.get((tuple(self.new_visited), tuple(self.sorted_nlp)))
-        logging.debug(f"search times = {search_times}")
-        if search_times != None:
-            logging.debug(f"the length of search times = {len(search_times)}")
-            for i in range(len(search_times)):
-                self.label_check[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(search_times[i]))] = self.memo.get((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(search_times[i])))
-            logging.debug(f"label check = {self.label_check}")
-        else:
-            pass
-        #self.label_check1 = {k: v for k, v in self.memo.items() if k[0]==self.new_visited and k[1]==self.sorted_nlp}
-        logging.debug(f"the label check is {self.label_check} ")
-        #logging.debug(f"the old label check is {self.label_check1}")
-        logging.debug(f"the shortcut memo is {self.shortcut_memo}")
-        logging.debug(f"end shortcut search")
-        return
-
     #the first function determines the earliest time a vehicle arrives at the jobs in V_i while servicing the jobs in S_i
-    def VRP_first(self):
-        sorted_nlp1, sorted_nt1 = zip(*sorted(zip(self.new_last_point, self.new_time)))
-        #res1 = {k: v for k, v in self.memo.items() if k[0]==self.new_visited and k[1]==sorted_nlp1}
-        #logging.debug(f"key search ({self.new_visited}, {self.new_last_point}, _) = {res1}")
-        logging.debug(f"key search ({self.new_visited}, {self.new_last_point}, _) = {self.label_check}")
-        res2 = {value: key for key, value in self.label_check.items()}
-        if len(self.label_check) !=0: #len(res1) != 0:
-            res2 = [key for key in self.label_check.keys()]
-            logging.debug(f"relevent keys = {res2}")
-            res3 = [res2[i][2] for i in range(len(res2))]      
-            logging.debug(f"relevent times = {res3}")
-        else:
-            res3=[]
-        if len(res3) == 0:
-            logging.debug(f"current times are earliest times = {sorted_nt1}")
+    def VRP_first1(self):
+        res3 = self.prefix_label_times
+        if res3 == None:
+            logging.debug(f"current times are earliest times = {self.sorted_nt}")
             for i in range(self.number_of_vehicles):
-                self.first[i] = sorted_nt1[i]
+                self.first[i] = self.sorted_nt[i]
         else:
-            #res4 = []
             for j in range(len(res3)):
                 logging.debug(f"key {j} = {res3[j]}")
                 for i in range(self.number_of_vehicles):
-                    #res4 = res4 + [min(res3[j][i])]
-                    #logging.debug(f"minimum values = {res3}")
-                    self.first[i] = min(res3[j][i], sorted_nt1[i])
+                    self.first[i] = min(res3[j][i], self.sorted_nt[i])
                     logging.debug(f"first = {self.first}")
         return
 
@@ -788,8 +688,7 @@ class VRP_Problem:
         unreachable_points = [i for i in self.all_points_set if i not in self.new_visited]
         logging.debug(f"unreachable points = {unreachable_points}")
         if len(unreachable_points) != 0:
-            self.VRP_first()
-            #_, first1 = zip(*sorted(zip(self.vehicle_order, self.first)))
+            self.VRP_first1()
             logging.debug(f"first = {self.first}")
             vehicles_to_check = {i for i in self.vehicle_order}
             logging.debug(f"vehicles to check = {vehicles_to_check}")
@@ -801,7 +700,6 @@ class VRP_Problem:
                     if self.first[vehicle_to_check] <= self.LDT_array[j][self.sorted_nlp[vehicle_to_check]]:
                         logging.debug(f"first = {self.first[vehicle_to_check]} <= LDT({j},{self.sorted_nlp[vehicle_to_check]}) = {self.LDT_array[j][self.sorted_nlp[vehicle_to_check]]}")
                         unreachable_points = [i for i in unreachable_points if i not in [j]]
-                        
                         logging.debug(f"unreachable points are now = {unreachable_points}")
                     else:
                         logging.debug(f"first = {self.first[vehicle_to_check]} > LDT({j},{self.sorted_nlp[vehicle_to_check]}) = {self.LDT_array[j][self.sorted_nlp[vehicle_to_check]]}")
@@ -819,648 +717,275 @@ class VRP_Problem:
             logging.info(f"test 1 passed")
         if test1 == False:
             self.test1_rejected = self.test1_rejected + 1
-            self.rejected_labels[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))]=self.sorted_nd
-        return test1 #most recent version
-
-    def VRP_test1(self):
-        check = [i for i in all_points_set if i not in self.new_visited]
-        if len(check) == 0:
-            test1 = True
-            logging.debug(f"test1 = {test1}")
-        else:            
-            self.VRP_first()
-            _, first1 = zip(*sorted(zip(self.vehicle_order, self.first)))
-            logging.debug(f"first1 = {first1}")
-            
-            T1_LDT = [0 for i in range(self.number_of_vehicles)]
-            logging.debug(f"T1_LDT = {T1_LDT}")
-            
-            for i in range(self.number_of_vehicles):
-                T1_LDT[i] = int(min(self.LDT_array[j][self.new_last_point[i]] for j in check))
-            T1_LDT=tuple(T1_LDT)
-            logging.debug(f"T1_LDT = {T1_LDT}")
-            
-            T1_outcome = [(first1 <= T1_LDT) for first1, T1_LDT in zip(first1, T1_LDT)]
-            logging.debug(f"T1_outcome = {T1_outcome}")
-            
-            check = all(T1_outcome)
-            logging.debug(f"check = {check}")        
-            if not check:
-                #logging.debug(f"first = {self.first} > {min(self.LDT_array[j][self.new_last_point] for j in self.all_points_set.difference(self.new_visited))}")
-                logging.info(f"({self.new_visited}, {self.new_last_point}, {self.new_time}) fails test 1")
-                test1 = False
-                logging.debug(f"test1 = {test1}")
-            else:
-                #logging.debug(f"first = {self.first} <= {min(self.LDT_array[j][self.new_last_point] for j in self.all_points_set.difference(self.new_visited))}")
-                logging.info(f"({self.new_visited}, {self.new_last_point}, {self.new_time}) passes test 1")
-                test1 = True
-                logging.debug(f"test1 = {test1}")
-        return test1
+            self.rejected_labels[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)]=list(self.sorted_nd)
+        return test1 
 
     #dominance test checks to see if the current label has is totally dominated by any label already stored.  If so the current label is not added.  Otherwise the current label is added and then it checks to see if the current label totally dominates any existing label.  If so those existing labels that are totally dominated are deleted.  If no existing labels are dominated nothing happens.
-    def VRP_dominance_test(self):
-        logging.info(f"starting dominance check:")
-        sorted_nlp, sorted_nt, sorted_nd, sorted_vo = zip(*sorted(zip(self.new_last_point, self.new_time, self.new_dist, self.vehicle_order)))
-        self.VRP_first()
-        sorted_first = self.first
-        if len({k: v for k, v in self.memo.items() if k[0]==self.new_visited and k[1]==sorted_nlp}) != 0: #possible dominated situation            
-            prev_lab_dist = self.memo[(self.new_visited, tuple(sorted_nlp), tuple(sorted_nt))][0]
-            logging.debug(f"current label's distances = {prev_lab_dist}")
-            outcome1 = [(sorted_nt <= sorted_first) for sorted_nt, sorted_first in zip(sorted_nt, sorted_first)]
-            outcome2 = [(sorted_nd <= prev_lab_dist) for sorted_nd, prev_lab_dist in zip(sorted_nd, prev_lab_dist)]
-            outcome3 = [(sorted_nt < sorted_first) for sorted_nt, sorted_first in zip(sorted_nt, sorted_first)]
-            outcome4 = [(sorted_nd >= prev_lab_dist) for sorted_nd, prev_lab_dist in zip(sorted_nd, prev_lab_dist)]
-            outcome5 = [(sorted_nt >= sorted_first) for sorted_nt, sorted_first in zip(sorted_nt, sorted_first)]
-            outcome6 = [(sorted_nd < prev_lab_dist) for sorted_nd, prev_lab_dist in zip(sorted_nd, prev_lab_dist)]
-            if all(outcome1) and all(outcome2): #time and cost improvement, replace label
-                del self.memo[(tuple(self.new_visited), tuple(sorted_nlp), tuple(sorted_first))]
-                self.memo[(tuple(self.new_visited), tuple(sorted_nlp), tuple(sorted_nt))] = (sorted_nd, self.prev_last_point, self.prev_time, sorted_vo)
-                self.queue.remove((tuple(self.new_visited), tuple(sorted_nlp), tuple(sorted_first)))
-                self.queue.append((tuple(self.new_visited), tuple(sorted_nlp), tuple(sorted_nt)))
-                logging.info(f"label ({self.new_visited}, {sorted_nlp}, {sorted_nt}) dominated, case 1, replaces label ({self.new_visited},{self.new_last_point},{sorted_first})")
-                
-            elif all(outcome3) and all(outcome4): #time improvement only, add new label
-                self.memo[(tuple(self.new_visited), tuple(sorted_nlp), tuple(sorted_nt))] = (sorted_nd, self.prev_last_point, self.prev_time, sorted_vo)
-                self.queue.append((tuple(self.new_visited), tuple(sorted_nlp), tuple(sorted_nt)))
-                logging.info(f"label ({self.new_visited}, {sorted_nlp}, {sorted_nt}) dominated, case 3, better time, worse cost, adds label")
-                
-                                
-            elif all(outcome5) and all(outcome6): #cost improvement only, add new label
-                self.memo[(tuple(self.new_visited), tuple(sorted_nlp), tuple(sorted_nt))] = (sorted_nd, self.prev_last_point, self.prev_time, sorted_vo)
-                self.queue.append((self.new_visited, sorted_nlp, sorted_nt))
-                logging.info(f"label ({self.new_visited}, {sorted_nlp}, {sorted_nt}) dominated, case 4, slower time, better cost, adds label")
-                
-            else:
-                logging.info(f"label ({self.new_visited}, {sorted_nlp}, {sorted_nt}) dominated, case 5, no label created")
-                                 
-        else: 
-            self.memo[(tuple(self.new_visited), tuple(sorted_nlp), tuple(sorted_nt))] = (sorted_nd, self.prev_last_point, self.prev_time, sorted_vo)
-            self.queue.append((tuple(self.new_visited), tuple(sorted_nlp), tuple(sorted_nt)))
-            logging.info(f"no (S,V_i) label exists, {self.new_visited, sorted_nlp, sorted_nt} added") 
-            
-        return
-
-    def VRP_dominance_test_update(self):
+    def VRP_dominance_test_update4(self):
         #we say that one label dominates another if each vehicle in a label arrives at the desired location at least as fast and at least as cheap as another label
         #this test checks to see if the current label dominates any existing labels or if it dominates any current labels.
         logging.info(f"starting dominance check:")
-        #sorted_nlp, sorted_nt, sorted_nd, sorted_vo = zip(*sorted(zip(self.new_last_point, self.new_time, self.new_dist, self.vehicle_order)))
-        #dom_lab = {k: v for k, v in self.memo.items() if k[0]==self.new_visited and k[1]==sorted_nlp}
-        dom_lab = self.label_check
-        #dom_lab = self.label_check = {k: v for k, v in self.memo.items() if k[0]==self.new_visited and k[1]==self.sorted_nlp}.  These are the labels that could possibly dominate the current label or be dominated by the current label.
-        logging.debug(f"possible dominated labels = {dom_lab}")
-        if len(dom_lab) != 0: #possible dominated situation            
-            dom_lab_keys = [key for key in dom_lab.keys()]
-            #dom_lab_keys removes the values associated with each dictionary entry in the possibly dominated labels (dom_lab).
-            #what if two label have the same key, but different values?
-            logging.debug(f"possible dominated label keys = {dom_lab_keys}")
-            dom_lab_times = [dom_lab_keys[i][2] for i in range(len(dom_lab_keys))]
-            #dom_lab_times strips away everything but the times
-            logging.debug(f"possible dominated label times = {dom_lab_times}")
-            dom_lab_values = [value for value in dom_lab.values()]
-            #dom_lab_values removes the keys associated with each dictionary entry in the possibly dominated labels (dom_lab).
-            logging.debug(f"possible dominated label values = {dom_lab_values}")
-            dom_lab_dist = [dom_lab_values[i][0] for i in range(len(dom_lab_values))]
-            #dom_lab_dist stips away everything but the costs 
-            logging.debug(f"possible dominated label distances = {dom_lab_dist}")
-            time_check = [[False for j in range(self.number_of_vehicles)] for i in range(len(dom_lab))]
-            dist_check = [[False for j in range(self.number_of_vehicles)] for i in range(len(dom_lab))]
-            #time_check and dist_check are set up to record the outcomes of comparing the times and cost (dist) of the current label with the labels in dom_lab
-            for j in range(self.number_of_vehicles):
-                for i in range(len(dom_lab)):
-                    if self.sorted_nt[j] <= dom_lab_times[i][j]:
-                        #compares the jth entry for time in the current label to the jth entry for time in the ith label in the possibly dominated labels
-                        time_check[i][j] = True
-                        #records the result in the jth component of ith time_check tuple
-                        logging.debug(f"time check = {time_check}")
-                    else:
-                        continue
-                    if self.sorted_nd[j] <= dom_lab_dist[i][j]:
-                        #compares the jth entry for cost (dist) in the current label to the jth entry for cost (dist) in the ith label in the possibly dominated labels
-                        dist_check[i][j] = True
-                        #records the result in the jth component of ith dist_check tuple
-                        logging.debug(f"dist check = {dist_check}")
-                    else:
-                        continue
-            label_dom_by_time = [not any(time_check[i]) for i in range(len(dom_lab))]
-            #label_dom_by_time processes the results of the previous test, but I think this is the problem.  I should only care if all entries in the tuple are false or all entries are true.  I can ascertain the latter from this, but no the former.
-            label_dom_by_dist = [not any(dist_check[i]) for i in range(len(dom_lab))]
-            label_to_delete = []
-            if all(label_dom_by_time) and all(label_dom_by_dist):
-                logging.info(f"the new label ({self.new_visited}, {self.sorted_nlp}, {self.sorted_nt}) is totally dominated by all existing labels, so it is not added")
-            else:
-                for i in range(len(dom_lab)):
-                    if all(time_check[i]) and all(dist_check[i]):
-                        label_to_delete = label_to_delete + [i]
-                if len(label_to_delete) != 0:
-                    #logging.info(f"the new label ({self.new_visited}, {sorted_nlp}, {sorted_nt}) totally dominates the existing labels {dom_lab[i] for i in label_to_delete}") #this does not display the correct message?
-                    for i in label_to_delete:
-                        del self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(dom_lab_times[i]))]
-                        self.queue.remove((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(dom_lab_times[i])))
-                        #del self.shortcut_memo[(tuple(self.new_visited), tuple(self.sorted_nlp))] #delete the dominated value?
-                        #self.deleted_labels.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(dom_lab_times[i])))
-                        logging.info(f"the existing label {self.new_visited}, {self.sorted_nlp}, {dom_lab_times[i]} is totally dominated by the current label so it is deleted.")
-                        self.dom_lab_rejected = self.dom_lab_rejected + 1
-                        self.rejected_labels.add((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
-                    logging.info(f"the new label ({self.new_visited}, {self.sorted_nlp}, {self.sorted_nt}) is NOT totally dominated by existing labels, so it is added")
-                    self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo)
-                    self.queue.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
-                    #self.added_labels.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
-                    #key = (tuple(self.new_visited), tuple(self.sorted_nlp)) 
-                    #self.shortcut_memo.setdefault(key, [])
-                    #self.shortcut_memo[key].append(tuple(self.sorted_nt))
-        else: 
-            self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo)
-            self.queue.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
-            #self.added_labels.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
-            #key = (tuple(self.new_visited), tuple(self.sorted_nlp)) 
-            #self.shortcut_memo.setdefault(key, [])
-            #self.shortcut_memo[key].append(tuple(self.sorted_nt))
-            logging.info(f"no (S,V_i) label exists, {self.new_visited, self.sorted_nlp, self.sorted_nt} added") 
-               
-        return
-
-    def VRP_dominance_test_update1(self):
-        #we say that one label dominates another if each vehicle in a label arrives at the desired location at least as fast and at least as cheap as another label
-        #this test checks to see if the current label dominates any existing labels or if it dominates any current labels.
-        logging.info(f"starting dominance check:")
-        dom_lab = self.label_check
+        dom_lab = self.prefix_labels
         #dom_lab = self.label_check = {k: v for k, v in self.memo.items() if k[0]==self.new_visited and k[1]==self.sorted_nlp}.  
         #These are the labels that could possibly dominate the current label or be dominated by the current label.
         logging.debug(f"possible dominated labels = {dom_lab}")
-        if len(dom_lab) == 0: #no labels exist to dominate the current label
-            logging.info(f"no (S,V_i) label exists, {self.new_visited, self.sorted_nlp, self.sorted_nt} added") 
-            #I was having problems with labels that had more than one cost associated with them, my solution is to just include a 3 dp on the times to make a non-duplicate dictionary entry
-            if (tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)) in self.queue:
-                self.b = -2
-                while (tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)) in self.queue:
-                        self.duplicate_dictionary_workaround()
-                                   
-                logging.debug(f"sorted_nt = {self.sorted_nt}")
-                
-                self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo)
-                self.queue.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))       
-            else:
-                self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo)
-                self.queue.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
+        if dom_lab == None: #no labels exist to dominate the current label
+            logging.info(f"no (S,V_i) label exists, {self.new_visited, self.sorted_nlp, self.sorted_nt, self.key_version} added") 
+            self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo, self.prev_key_version)
+            self.queue.put((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version))
+            self.prefix_memo[(tuple(self.new_visited), tuple(self.sorted_nlp))] = [(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)]
+            logging.debug(f"prefix_memo = {self.prefix_memo}")
+           
         else:    #possible dominated situation            
-            dom_lab_keys = [key for key in dom_lab.keys()]
-            #dom_lab_keys removes the values associated with each dictionary entry in the possibly dominated labels (dom_lab).
-            #what if two label have the same key, but different values?
-            logging.debug(f"possible dominated label keys = {dom_lab_keys}")
-            dom_lab_times = [dom_lab_keys[i][2] for i in range(len(dom_lab_keys))]
-            #dom_lab_times strips away everything but the times
-            logging.debug(f"possible dominated label times = {dom_lab_times}")
-            dom_lab_values = [value for value in dom_lab.values()]
-            #dom_lab_values removes the keys associated with each dictionary entry in the possibly dominated labels (dom_lab).
-            logging.debug(f"possible dominated label values = {dom_lab_values}")
-            for i in range(len(dom_lab_values)):
-                for j in range(self.number_of_vehicles):
-                    dom_lab[i][j] = float(round.np(dom_lab[i][j],2))
-            logging.debug(f"possible dominated label values = {dom_lab_values}")
-            dom_lab_dist = [dom_lab_values[i][0] for i in range(len(dom_lab_values))]
-            #dom_lab_dist stips away everything but the costs 
-            logging.debug(f"possible dominated label distances = {dom_lab_dist}")
-            #time_check 1 and dist_check 1 are set up to record the outcomes of comparing the times and cost (dist) of the current label with the labels in dom_lab to check if the current label is dominated by an existing label
-            time_check1 = [[True for j in range(self.number_of_vehicles)] for i in range(len(dom_lab))]
-            dist_check1 = [[True for j in range(self.number_of_vehicles)] for i in range(len(dom_lab))]
-            logging.debug(f"time check 1 = {time_check1}")
-            logging.debug(f"dist check 1 = {dist_check1}")
-
-            for j in range(self.number_of_vehicles):
-                for i in range(len(dom_lab)):
-                    logging.debug(f"current time = {self.sorted_nt[j]}")
-                    logging.debug(f"stored time = {dom_lab_times[i][j]}")
-                    if self.sorted_nt[j] < dom_lab_times[i][j]:
-                        #compares the jth entry for time in the current label to the jth entry for time in the ith label in the possibly dominated labels
-                        time_check1[i][j] = False
-                        #records the result in the jth component of ith time_check tuple
-                        logging.debug(f"time check 1 = {time_check1}")
-                    else:
-                        logging.debug(f"time check 1 = {time_check1}")
-                        continue
-            for j in range(self.number_of_vehicles):
-                for i in range(len(dom_lab)):
-                    logging.debug(f"current dist = {self.sorted_nd[j]}")
-                    logging.debug(f"stored dist = {dom_lab_dist[i][j]}")
-                    if self.sorted_nd[j] < dom_lab_dist[i][j]:
-                        
-                        #compares the jth entry for cost (dist) in the current label to the jth entry for cost (dist) in the ith label in the possibly dominated labels
-                        dist_check1[i][j] = False
-                        #records the result in the jth component of ith dist_check tuple
-                        logging.debug(f"dist check 1 = {dist_check1}")
-                    else:
-                        logging.debug(f"dist check 1 = {dist_check1}")
-                        continue
-            
-            logging.debug(f"completed time check 1 = {time_check1}")
-            logging.debug(f"completed dist check 1 = {dist_check1}")
-
-            #now, use the results of the time and distance check 1 to determine to see if any stored label dominates the current label
-            dom_check_1_time = [all(time_check1[i]) for i in range(len(dom_lab))]
-            logging.debug(f"dom_check_1_time = {dom_check_1_time}")
-            #label_dom_curr_by_time processes the results of the previous test to determine if any stored label dominates the current label.  It is checking if there is any entry in time_check that is [False, False].
-            dom_check_1_dist = [all(dist_check1[i]) for i in range(len(dom_lab))]
-            logging.debug(f"dom_check_1_dist = {dom_check_1_dist}")
-            #label_dom_curr_by_dist processes the results of the previous test to determine if any stored label dominates the current label.  It is checking if there is any entry in dist_check that is [False, False].
-            
-            #this loop detects if the current label is completely dominated by any existing label
-            curr_lab_dominated_by_existing_label = [False for i in range(len(dom_lab))]
-            logging.debug(f"curr_lab_dominated_by_existing_label = {curr_lab_dominated_by_existing_label}")
-            for i in range(len(dom_lab)):
-                {self.new_visited}, {self.sorted_nlp}, {dom_lab_times[i]}
-                logging.debug(f"dom_check_1_time[{i}] = {dom_check_1_time[i]}")
-                logging.debug(f"dom_check_1_dist[{i}] = {dom_check_1_dist[i]}")
-                if dom_check_1_time[i] == True and dom_check_1_dist[i] == True:
-                    
-                    curr_lab_dominated_by_existing_label[i] = True
-                    dom_stored_label = (self.new_visited, self.sorted_nlp, dom_lab_times[i])
-                    dom_stored_dist = dom_lab_dist[i]
-                else:
-                    continue
-            
-            if any(curr_lab_dominated_by_existing_label):
-                logging.debug(f"memo length = {len(self.memo)}")
-                logging.debug(f"queue length = {len(self.queue)}")
-                self.rejected_labels[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))]=list(self.sorted_nd)    
-                self.dom_lab_rejected = self.dom_lab_rejected + 1
-                logging.debug(f"{(self.new_visited, self.sorted_nlp, self.sorted_nt)} with distances {self.sorted_nd} is dominated by {dom_stored_label} with distances {dom_stored_dist}")
-                logging.debug(f"memo length = {len(self.memo)}")
-                logging.debug(f"queue length = {len(self.queue)}")
-                
-            else:
-                logging.debug(f"{(self.new_visited, self.sorted_nlp, self.sorted_nt)} with distances {self.sorted_nd} is not dominated by an existing label.")
-                if (tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)) in self.queue:
-                    self.b = -2
-                    while (tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)) in self.queue:
-                        self.duplicate_dictionary_workaround()
-                    
-                    logging.debug(f"sorted_nt = {self.sorted_nt}")
-                    
-                    self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo)
-                    self.queue.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
-                else:
-                    self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo)
-                    self.queue.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
-
-            if not any(curr_lab_dominated_by_existing_label): 
-                #time_check 2 and dist_check 2 are set up to record the outcomes of comparing the times and cost (dist) of the current label with the labels in dom_lab to check if the current label dominates by an existing label
-                time_check2 = [[True for j in range(self.number_of_vehicles)] for i in range(len(dom_lab))]
-                dist_check2 = [[True for j in range(self.number_of_vehicles)] for i in range(len(dom_lab))]
-            
-                for j in range(self.number_of_vehicles):
-                    for i in range(len(dom_lab)):
-                    
-                        if self.sorted_nt[j] > dom_lab_times[i][j]:
-                            #compares the jth entry for time in the current label to the jth entry for time in the ith label in the possibly dominated labels
-                            time_check2[i][j] = False
-                            #records the result in the jth component of ith time_check tuple
-                        
-                        else:
-                            continue
-                for j in range(self.number_of_vehicles):
-                    for i in range(len(dom_lab)):
-                        if self.sorted_nd[j] > dom_lab_dist[i][j]:
-                        
-                            #compares the jth entry for cost (dist) in the current label to the jth entry for cost (dist) in the ith label in the possibly dominated labels
-                            dist_check2[i][j] = False
-                            #records the result in the jth component of ith dist_check tuple
-                        
-                        else:
-                            continue
-                logging.debug(f"current times = {self.sorted_nt}")
-                logging.debug(f"stored times = {dom_lab_times}")
-                logging.debug(f"completed time check 2 = {time_check2}")
-                logging.debug(f"current dist = {self.sorted_nd}")
-                logging.debug(f"stored dists = {dom_lab_dist}")
-                logging.debug(f"completed dist check 2 = {dist_check2}")
-
-                #now, use the results of the time and distance check 2 to determine to see if any stored label dominates the current label
-                dom_check_2_time = [all(time_check2[i]) for i in range(len(dom_lab))]
-                logging.debug(f"dom_check_2_time = {dom_check_2_time}")
-                #dom_check_2_time processes the results of the previous test to determine if any stored label dominates the current label.  It is checking if there is any entry in time_check that is [False, False].
-                dom_check_2_dist = [all(dist_check2[i]) for i in range(len(dom_lab))]
-                logging.debug(f"dom_check_2_dist = {dom_check_2_dist}")
-                #dom_check_2_dist processes the results of the previous test to determine if any stored label dominates the current label.  It is checking if there is any entry in dist_check that is [False, False].
-            
-                #this loop detects if the current label is completely dominated by any existing label
-                curr_lab_dominates_an_existing_label = [False for i in range(len(dom_lab))]
-                logging.debug(f"curr_lab_dominated_by_existing_label = {curr_lab_dominated_by_existing_label}")
-                label_to_delete = []
-                for i in range(len(dom_lab)):
-                    logging.debug(f"checking possible dominated label {i}")
-                    logging.debug(f"dom_check_2_time[{i}] = {dom_check_2_time[i]}")
-                    logging.debug(f"dom_check_2_dist[{i}] = {dom_check_2_dist[i]}")
-                    if dom_check_2_time[i] == True and dom_check_2_dist[i] == True:
-                        label_to_delete = label_to_delete + [i]
-                        #logging.info(f"{dom_lab[i]} is dominated and maked for deletion")
-                        #logging.debug(f"labels to delete = {label_to_delete}")
-
-                    else:
-                        #logging.info(f"{dom_lab[i]} is not dominated")
-                        continue
-                        
-                if len(label_to_delete) != 0:
-                    #logging.debug(f"delete dom_lab[{i}] = {dom_lab[i]}")
-                    for i in label_to_delete:
-                        #logging.debug(f"label to be deleted is {dom_lab[i]}")
-                        logging.debug(f"memo length = {len(self.memo)}")
-                        logging.debug(f"queue length = {len(self.queue)}")
-                        del self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(dom_lab_times[i]))]
-                        self.queue.remove((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(dom_lab_times[i])))
-                        #del self.shortcut_memo[(tuple(self.new_visited), tuple(self.sorted_nlp))] #delete the dominated value?
-                        #self.deleted_labels.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(dom_lab_times[i])))
-                        logging.info(f"the existing label {self.new_visited}, {self.sorted_nlp}, {dom_lab_times[i]} with cost {dom_lab_dist[i]} is totally dominated by the current label, {self.new_visited}, {self.sorted_nlp}, {self.sorted_nt} with cost {self.sorted_nd}, so it is deleted.")
-                        logging.debug(f"memo length = {len(self.memo)}")
-                        logging.debug(f"queue length = {len(self.queue)}")
-                       
-                        self.dom_lab_rejected = self.dom_lab_rejected + 1
-                        self.rejected_labels[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(dom_lab_times[i]))]=list(dom_lab_dist[i])
-                           
-                else:
-                    logging.info(f"there are no dominated labels to remove")
-                    
-        return 
-
-    def duplicate_dictionary_workaround(self):
-        self.sorted_nt = list(self.sorted_nt)
-        temp_dom_lab_times = [0 for i in range(self.number_of_vehicles)]
-        for i in range(self.number_of_vehicles):
-            temp_dom_lab_times[i] = math.floor(self.sorted_nt[i] * 10 ** 2)/10**2
-        logging.debug(f"rounded dom_lab_time = {temp_dom_lab_times}")
-        a = 1
-        b = self.sorted_nt[0] - temp_dom_lab_times[0]
-        if b == 0:
-            c = a * 10 ** -3
-        else:
-            b = math.log10(b)-1
-            c = a * 10 ** b
-        for i in range(self.number_of_vehicles):
-            self.sorted_nt[i] = self.sorted_nt[i] + c
-        self.sorted_nt = tuple(self.sorted_nt)
-        logging.debug(f"updated new time = {self.sorted_nt}")
-        return
-
-    def VRP_dominance_test_update2(self):
-        #we say that one label dominates another if each vehicle in a label arrives at the desired location at least as fast and at least as cheap as another label
-        #this test checks to see if the current label dominates any existing labels or if it dominates any current labels.
-        logging.info(f"starting dominance check:")
-        dom_lab = self.label_check
-        #dom_lab = self.label_check = {k: v for k, v in self.memo.items() if k[0]==self.new_visited and k[1]==self.sorted_nlp}.  
-        #These are the labels that could possibly dominate the current label or be dominated by the current label.
-        logging.debug(f"possible dominated labels = {dom_lab}")
-        if len(dom_lab) == 0: #no labels exist to dominate the current label
-            logging.info(f"no (S,V_i) label exists, {self.new_visited, self.sorted_nlp, self.sorted_nt} added") 
-            self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo)
-            self.queue.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
-            
-        else:    #possible dominated situation            
-            dom_lab_keys = [key for key in dom_lab.keys()]
-            #dom_lab_keys removes the values associated with each dictionary entry in the possibly dominated labels (dom_lab).
-            #what if two label have the same key, but different values?
-            logging.debug(f"possible dominated label keys = {dom_lab_keys}")
-            dom_lab_times = [dom_lab_keys[i][2] for i in range(len(dom_lab_keys))]
-            #dom_lab_times strips away everything but the times
-            dom_lab_times = [tuple(dom_lab_times[i]) for i in range(len(dom_lab_times))]
-            logging.debug(f"possible dominated label times = {dom_lab_times}")
-            dom_lab_values = [value for value in dom_lab.values()]
-            #dom_lab_values removes the keys associated with each dictionary entry in the possibly dominated labels (dom_lab).
-            logging.debug(f"possible dominated label values = {dom_lab_values}")   
-            dom_lab_dist = [dom_lab_values[i][0] for i in range(len(dom_lab_values))]
-            dom_lab_dist = [tuple(dom_lab_dist[i]) for i in range(len(dom_lab_dist))]
-            #dom_lab_dist stips away everything but the costs 
-            logging.debug(f"possible dominated label distances = {dom_lab_dist}")          
-            #dom_check_1_time checks to see if there is an existing label that dominates the time for each vehicle for the current label
             dom_check_1_time = [None for i in range(len(dom_lab))]
+            dom_check_2_time = [None for i in range(len(dom_lab))]
+            dom_check_3_time = [None for i in range(len(dom_lab))]
             logging.debug(f"dom_check_1_time = {dom_check_1_time}")
-            #dom_check_1_dist checks to see if there is an existing label that dominates the distance for each vehicle for the current label
+            #dom_check_#_dist checks to see if there is an existing label that dominates the distance for each vehicle for the current label
             dom_check_1_dist = [None for i in range(len(dom_lab))]
+            dom_check_2_dist = [None for i in range(len(dom_lab))]
             for i in range(len(dom_lab)):
-                dom_check_1_time[i] = all(x >= y for x, y in zip(self.sorted_nt, dom_lab_times[i]))
-                dom_check_1_dist[i] = all(x >= y for x, y in zip(self.sorted_nd, dom_lab_dist[i]))
-                logging.debug(f"sorted_nt = {self.sorted_nt}")
-                logging.debug(f"dom lab times = {dom_lab_times[i]}")
-                logging.debug(f"dom_check_1_time = {dom_check_1_time}")
-                logging.debug(f"sorted_nd = {self.sorted_nd}")
-                logging.debug(f"dom lab dist = {dom_lab_dist[i]}")
-                logging.debug(f"dom_check_1_dist = {dom_check_1_dist}")
-            
-            #new_label_dominated checks to see if there is an existing label that dominates both times and distances for the current label.    
-            new_label_dominated = False
+                dom_check_1_time[i] = all(x >= y for x, y in zip(self.sorted_nt, self.prefix_label_times[i]))
+                dom_check_1_dist[i] = all(x >= y for x, y in zip(self.sorted_nd, self.prefix_label_dist[i]))
+                dom_check_2_time[i] = all(x < y for x, y in zip(self.sorted_nt, self.prefix_label_times[i]))
+                dom_check_2_dist[i] = all(x <= y for x, y in zip(self.sorted_nd, self.prefix_label_dist[i]))                       
+            #dom_check_1 checks to see if there is an existing label that dominates both times and distances for the current label.    
+            logging.debug(f"dom_check_1_time = {dom_check_1_time}, dom_check_1_dist = {dom_check_1_dist}, dom_check_2_time = {dom_check_2_time}, dom_check_2_dist= {dom_check_2_dist}")
+            dom_check_1 = False
             for i in range(len(dom_lab)):
                 if dom_check_1_time[i] and dom_check_1_dist[i]:
-                    new_label_dominated = True
+                    dom_check_1 = True
                     dominator = i
                 else:
                     continue
-            #when new_label_dominated is true the current label is rejected because there is an existing label that totally dominates it.
-            if new_label_dominated:
-                logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt}) with costs {self.sorted_nd} is dominated by the existing label ({self.new_visited, self.sorted_nlp, dom_lab_times[dominator]}) with costs {dom_lab_dist[dominator]} so no new label is added.")
-            
-                #when new_label_dominated is false the current label is not rejected because there is no existing label that totally dominates it.    
-            else:
-                logging.info(f"no existing label completely dominates the current label.  Continue with other dominance tests")
-                #dom_check_2_time checks to see if the current label dominates the time for each vehicle for any existing label.
-                dom_check_2_time = [None for i in range(len(dom_lab))]
-                #dom_check_2_dist checks to see if the current label dominates the distance for each vehicle for any existing label.
-                dom_check_2_dist = [None for i in range(len(dom_lab))]
-                for i in range(len(dom_lab)):
-                    dom_check_2_time[i] = all(x == y for x, y in zip(self.sorted_nt, dom_lab_times[i]))
-                    dom_check_2_dist[i] = all(x <= y for x, y in zip(self.sorted_nd, dom_lab_dist[i]))
-                    logging.debug(f"sorted_nt = {self.sorted_nt}")
-                    logging.debug(f"dom lab times = {dom_lab_times[i]}")
-                    logging.debug(f"dom_check_2_time = {dom_check_2_time}")
-                    logging.debug(f"sorted_nd = {self.sorted_nd}")
-                    logging.debug(f"dom lab dist = {dom_lab_dist[i]}")
-                    logging.debug(f"dom_check_2_dist = {dom_check_2_dist}")
-                
-                #existing_label_dominated checks to see if the current label dominates both times and distances for some existing label.     
-                existing_label_dominated = False
-                #if existing_label_dominated is true then that existing label is removed from the queue and memo
-                for i in range(len(dom_lab)):
-                    if dom_check_2_time[i] and dom_check_2_dist[i]:
-                        existing_label_dominated = True
-                        logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt}) with costs {self.sorted_nd} dominates the existing label ({self.new_visited, self.sorted_nlp, dom_lab_times[i]}) with costs {dom_lab_dist[i]} so the existing label is deleted.")
-                        del self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(dom_lab_times[i]))]
-                        self.queue.remove((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(dom_lab_times[i])))
-                        
-                    else:
-                        logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt}) with costs {self.sorted_nd} DOES NOT dominate the existing label ({self.new_visited, self.sorted_nlp, dom_lab_times[i]}) with costs {dom_lab_dist[i]} so no the existing label remains.")
-                #when adding this new label we have to be quite careful because there might be an existing label with the same dictionary key, so first we check to see if that's the case.  If it is not the case, the current label is simply added.  Otherwise I add some trivial amount (<= 0.001 second) of time to the current label before adding it to the queue and memo.
-                if existing_label_dominated:
-                    logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt}) with costs {self.sorted_nd} completely dominates at least one existing label so the current label is added.")
-                    while (tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)) in dom_lab:
-                        self.duplicate_dictionary_workaround()                    
-                        logging.debug(f"sorted_nt = {self.sorted_nt}")
-                        self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo)
-                        self.queue.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
-                #If no label is dominated by the current label, again, we have to be quite careful adding the current label because there might be an existing label with the same dictionary key, so first we check to see if that's the case.  If it is not the case, the current label is simply added.  Otherwise I add some trivial amount (<= 0.001 second) of time to the current label before adding it to the queue and memo.
+            logging.debug(f"dom_check_1 = {dom_check_1}")
+            #dom_check_2 checks to see if the current label dominates both time and distance for an existing label.    
+            dom_check_2 = False
+            dominated = []
+            for i in range(len(dom_lab)):
+                if dom_check_2_time[i] and dom_check_2_dist[i]:
+                    dom_check_2 = True
+                    dominated = dominated + [self.prefix_labels[i]]
                 else:
-                    dom_check_3_time = [None for i in range(len(dom_lab))]
-                    for i in range(len(dom_lab)):
-                        #dom_check_3_time checks to see if the current label is identical to an existing label.  
-                        dom_check_3_time[i] =  all(x == y for x, y in zip(self.sorted_nt, dom_lab_times[i]))
-                        logging.debug(f"sorted_nt = {self.sorted_nt}")
-                        logging.debug(f"dom lab times = {dom_lab_times[i]}")
-                        logging.debug(f"dom_check_3_time = {dom_check_3_time}")
-                    #existing_label_partially_dominated checks to see if the the current label is identical to any existing label.    
-                    existing_label_partially_dominated = False
-                    for i in range(len(dom_lab)):
-                        if dom_check_3_time[i]:
-                            existing_label_partially_dominated = True
-                    #If the current label is identical, I add some trivial amount (<= 0.001 second) of time to the current label before adding it to the queue and memo.
-                    if existing_label_partially_dominated:
-                        while (tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)) in dom_lab:
-                            self.duplicate_dictionary_workaround()                    
-                            logging.debug(f"sorted_nt = {self.sorted_nt}")
-                            
-                        self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo)
-                        self.queue.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
-                        logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt}) with costs {self.sorted_nd} is a duplicate label to some existing label, but with different values. So the current label is updated and added.")
-                    #If the current label is not identical to an existing label, the current label is simply added.    
-                    else:
-                        self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo)
-                        self.queue.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
-                        logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt}) with costs {self.sorted_nd} partially dominates at least one existing label so the current label is added.")
-                        
-
-            
-            
-            
+                    continue
+            logging.debug(f"dom_check_2 = {dom_check_2}")
+            logging.debug(f"dominated = {dominated}")
+            #no labels are added or deleted if dom_check_1 is true because an existing label dominates the current one
+            if dom_check_1:
+                logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt}) with costs {self.sorted_nd} is dominated by the existing label ({self.new_visited, self.sorted_nlp, self.prefix_label_times[dominator]}) with costs {self.prefix_label_dist[dominator]} so no new label is added.")
+            #existing labels are deleted if dom_check_1 is true because the current label dominates those labels, the current label will be added later
+            elif dom_check_2:
+                if len(dominated) != 0:
+                    temp = self.prefix_memo[(tuple(self.new_visited), tuple(self.sorted_nlp))]
+                    logging.debug(f"temp = {temp}")
+                    
+                    for i in dominated:
+                        logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt}) with costs {self.sorted_nd} dominates the existing label {i} with costs {self.memo[i][0]} so the existing label is deleted.")
+                        del self.memo[i]
+                        #self.queue.remove(i)
+                        temp.remove(i)
+                    logging.debug(f"temp = {temp}")
+                    self.prefix_memo[(tuple(self.new_visited), tuple(self.sorted_nlp))] = temp
+                    logging.debug(f"prefix_memo = {self.prefix_memo}")
+                    
+                else:
+                    logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt, self.key_version}) with costs {self.sorted_nd} DOES NOT dominate the existing label ({self.new_visited, self.sorted_nlp, self.prefix_label_times[i]}) with costs {self.prefix_label_dist[i]} so the existing label is not deleted.")
+            #all other situations are 'incomplete dominance' so no labels are deleted and the current label will be added later.
+            #as long as the current label is not dominated it needs to be added, but this must be done carefull so as not to replace a non-dominated existing label
+            if not dom_check_1:
+                while (tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version) in dom_lab:
+                    self.key_version = self.key_version + 1                   
+                    logging.debug(f"key_version = {self.key_version}")
+                                
+                self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo, self.prev_key_version)
+                self.queue.put((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version))
+                if (tuple(self.new_visited), tuple(self.sorted_nlp)) in self.prefix_memo:
+                    temp = self.prefix_memo[(tuple(self.new_visited), tuple(self.sorted_nlp))]
+                    logging.debug(f"temp = {temp}")
+                    temp.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version))
+                    logging.debug(f"temp = {temp}")
+                    self.prefix_memo[(tuple(self.new_visited), tuple(self.sorted_nlp))] = temp
+                    logging.debug(f"prefix_memo = {self.prefix_memo}")                    
+                else:
+                    self.prefix_memo[(tuple(self.new_visited), tuple(self.sorted_nlp))] = [(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)]
+                    logging.debug(f"prefix_memo = {self.prefix_memo}")
+                logging.info(f"the current label ({self.new_visited, self.sorted_nlp, self.sorted_nt, self.key_version}) with costs {self.sorted_nd} is a duplicate label to some existing label, but with different values. So the current label is updated and added.")
+        return
+       
+    def prefix_search2(self):
+        self.label_check.clear()
+        self.prefix_labels = self.prefix_memo.get((tuple(self.new_visited), tuple(self.sorted_nlp)))
+        if self.prefix_labels != None:
+            for i in self.prefix_labels:
+                self.label_check[i] = self.memo[i]
+        else:
+            self.label_check = {}
+        logging.debug(self.label_check)
+        
+        if self.prefix_labels != None:
+            self.prefix_label_times = [self.prefix_labels[i][2] for i in range(len(self.prefix_labels))]
+            self.prefix_label_dist = []
+            for i in self.prefix_labels:
+                self.prefix_label_dist = self.prefix_label_dist + [self.memo[i][0]]
+        else:
+            self.prefix_label_times = None 
+            self.prefix_label_dist = None 
+        logging.debug(f"prefix time = {self.prefix_label_times}, prefix dist = {self.prefix_label_dist}, prefix labels = {self.prefix_labels}")
+        return    
             
     def retrace_optimal_path_VRP(self, memo: dict, n: int) -> [[int], float]:
-        points_to_retrace = tuple(range(self.number_of_jobs))    
-        full_path_memo = dict((k, v) for k, v in self.memo.items() if k[0] == points_to_retrace)
+        if self.stopper == True:
+            print(f"timed out no solution reached")
+            print(f"the time is {round(time.time() - self.t,3)}")
+            print(f"the memo length is {len(self.memo)}")
+        else:
+            points_to_retrace = tuple(range(self.number_of_jobs))    
+            full_path_memo = dict((k, v) for k, v in self.memo.items() if k[0] == points_to_retrace)
         
-        logging.debug(f"full path meemo = {full_path_memo}")
-        for x in full_path_memo:
-            logging.debug(f"x = {x}")
-            current_cost_vector = list(full_path_memo[x][0])
-            logging.debug(f"current cost vector = {current_cost_vector}")
-            for j in range(self.number_of_vehicles):
-                logging.debug(f"j = {j}")
-                logging.debug(f"current vehicle locations = {x[1]}")
-                logging.debug(f"current cost vector = {full_path_memo[x][0]}")
-                logging.debug(f"current location for vehicle {j} = {x[1][j]}")
-                current_cost_vector[j] = full_path_memo.get(x)[0][j]+self.distances_array[x[1][j]][0]
-                logging.debug(f"updated distances = {current_cost_vector}")
-                full_path_memo[x] = (tuple(current_cost_vector), full_path_memo.get(x)[1], full_path_memo.get(x)[2], full_path_memo.get(x)[3])
-                logging.debug(f"full path memo[{x}] = {full_path_memo[x]}")
-        logging.debug(f"updated cost full path memo = {full_path_memo}")     
-        #print(f"full path memo = {full_path_memo}")
-        
+            logging.debug(f"full path meemo = {full_path_memo}")
+            for x in full_path_memo:
+                logging.debug(f"x = {x}")
+                current_cost_vector = list(full_path_memo[x][0])
+                logging.debug(f"current cost vector = {current_cost_vector}")
+                for j in range(self.number_of_vehicles):
+                    logging.debug(f"j = {j}")
+                    logging.debug(f"current vehicle locations = {x[1]}")
+                    logging.debug(f"current cost vector = {full_path_memo[x][0]}")
+                    logging.debug(f"current location for vehicle {j} = {x[1][j]}")
+                    current_cost_vector[j] = full_path_memo.get(x)[0][j]+self.distances_array[x[1][j]][0]
+                    logging.debug(f"updated distances = {current_cost_vector}")
+                    full_path_memo[x] = (tuple(current_cost_vector), full_path_memo.get(x)[1], full_path_memo.get(x)[2], full_path_memo.get(x)[3], full_path_memo.get(x)[4])
+                    logging.debug(f"full path memo[{x}] = {full_path_memo[x]}")
+            logging.debug(f"updated cost full path memo = {full_path_memo}")     
 
-        if len(full_path_memo) == 0: 
-            optimal_cost=None, 
-            optimal_path=None, 
-            self.df1=None
-        elif len(full_path_memo) !=0:
-            path_key = min(full_path_memo.keys(), key=lambda x: sum(full_path_memo[x][0])) 
-            logging.debug(f"path key = {path_key}")
-            last_point = path_key[1]
-            logging.debug(f"last point = {last_point}")
-            last_time = path_key[2]
-            logging.debug(f"last time = {last_time}")
-            optimal_cost, prev_last_point, prev_last_time, vehicle_order = full_path_memo.get(path_key)
-            logging.debug(f"optimal cost = {optimal_cost}")
-            logging.debug(f"prev last point = {prev_last_point}")
-            logging.debug(f"prev last time = {prev_last_time}")
-            logging.debug(f"vehicle order = {vehicle_order}")
-            optimal_path = [[0] for i in range(self.number_of_vehicles)]
-            logging.debug(f"optimal path = {optimal_path}")
-            current_time_vector = [[] for i in range(self.number_of_vehicles)]
-            
-
-            for i in range(self.number_of_vehicles):
-                current_time_vector[i] = max(path_key[2][i], self.start_times[last_point[i]]) + self.service_times[last_point[i]]+self.travel_times_array[last_point[i]][0]
-                logging.debug(f"current time vector[{i} = {max(path_key[2][i], self.start_times[last_point[i]])} +{self.service_times[last_point[i]]}+ {self.travel_times_array[last_point[i]][0]} = {current_time_vector[i]}")
-            optimal_path_arrival_times = [[current_time_vector[i]] for i in vehicle_order]
-            logging.debug(f"optimal path arrival times = {optimal_path_arrival_times}")
-            
-
-            while len(points_to_retrace) != 0:
+            if len(full_path_memo) == 0: 
+                optimal_cost=None, 
+                optimal_path=None, 
+                self.df1=None
+            elif len(full_path_memo) !=0:
+                path_key = min(full_path_memo.keys(), key=lambda x: sum(full_path_memo[x][0])) 
+                logging.debug(f"path key = {path_key}")
                 last_point = path_key[1]
                 logging.debug(f"last point = {last_point}")
                 last_time = path_key[2]
                 logging.debug(f"last time = {last_time}")
-                _, prev_last_point, prev_last_time, vehicle_order = self.memo.get(path_key)
+                key_version = path_key[3]
+                logging.debug(f"key version = {key_version}")
+                optimal_cost, prev_last_point, prev_last_time, vehicle_order, prev_key_version = full_path_memo.get(path_key)
+                logging.debug(f"optimal cost = {optimal_cost}")
                 logging.debug(f"prev last point = {prev_last_point}")
                 logging.debug(f"prev last time = {prev_last_time}")
                 logging.debug(f"vehicle order = {vehicle_order}")
-                logging.debug(f"last point = {last_point}")
-                logging.debug(f"prev last point = {prev_last_point}")
-                
+                logging.debug(f"prev key version = {prev_key_version}")
+                optimal_path = [[0] for i in range(self.number_of_vehicles)]
+                logging.debug(f"optimal path = {optimal_path}")
+                current_time_vector = [[] for i in range(self.number_of_vehicles)]
+            
+
                 for i in range(self.number_of_vehicles):
-                    if last_point[i] in prev_last_point:
-                        continue
-                    else:
-                        point_to_remove = last_point[i] #LEFTOFF HERE NOT ADDING POINTS TO THE CORRECT ROUTE
-                        logging.debug(f"point to remove = {point_to_remove}")
-                        optimal_path[vehicle_order[i]] = [point_to_remove] + optimal_path[vehicle_order[i]]
+                    current_time_vector[i] = max(path_key[2][i], self.start_times[last_point[i]]) + self.service_times[last_point[i]]+self.travel_times_array[last_point[i]][0]
+                    logging.debug(f"current time vector[{i} = {max(path_key[2][i], self.start_times[last_point[i]])} +{self.service_times[last_point[i]]}+ {self.travel_times_array[last_point[i]][0]} = {current_time_vector[i]}")
+                optimal_path_arrival_times = [[current_time_vector[i]] for i in vehicle_order]
+                logging.debug(f"optimal path arrival times = {optimal_path_arrival_times}")
+            
+
+                while len(points_to_retrace) != 0:
+                    last_point = path_key[1]
+                    logging.debug(f"last point = {last_point}")
+                    last_time = path_key[2]
+                    logging.debug(f"last time = {last_time}")
+                    key_version = path_key[3]
+                    logging.debug(f"key version = {key_version}")
+                    _, prev_last_point, prev_last_time, vehicle_order, prev_key_version = self.memo.get(path_key)
+                    logging.debug(f"prev last point = {prev_last_point}")
+                    logging.debug(f"prev last time = {prev_last_time}")
+                    logging.debug(f"vehicle order = {vehicle_order}")
+                    logging.debug(f"last point = {last_point}")
+                    logging.debug(f"prev last point = {prev_last_point}")
+                    logging.debug(f"prev key version = {prev_key_version}")
+                
+                    for i in range(self.number_of_vehicles):
+                        if last_point[i] in prev_last_point:
+                            continue
+                        else:
+                            point_to_remove = last_point[i] 
+                            logging.debug(f"point to remove = {point_to_remove}")
+                            optimal_path[vehicle_order[i]] = [point_to_remove] + optimal_path[vehicle_order[i]]
+                            logging.debug(f"optimal path = {optimal_path}")
+                            optimal_path_arrival_times[vehicle_order[i]] = [last_time[i]] + optimal_path_arrival_times[vehicle_order[i]]
+                            logging.debug(f"optimal path arrival times = {optimal_path_arrival_times}")
+                            res1 = [i for i in points_to_retrace if i not in [point_to_remove]]
+                            points_to_retrace = tuple(sorted(res1))
+                            logging.debug(f"points to retrace = {points_to_retrace}")
+                            path_key = points_to_retrace, prev_last_point, prev_last_time, prev_key_version
+                            logging.debug(f"path key = {path_key}")
+                        
+                    if len(points_to_retrace) == 1: #this means 0 is the only point left to be assigned to routes
+                        logging.debug(f"points to retrace = {points_to_retrace}")
+                        for i in range(self.number_of_vehicles):
+                            optimal_path[i] = [0] + optimal_path[i]
+                            optimal_path_arrival_times[i] = [0]+optimal_path_arrival_times[i]
                         logging.debug(f"optimal path = {optimal_path}")
-                        optimal_path_arrival_times[vehicle_order[i]] = [last_time[i]] + optimal_path_arrival_times[vehicle_order[i]]
                         logging.debug(f"optimal path arrival times = {optimal_path_arrival_times}")
+                        point_to_remove = 0
                         res1 = [i for i in points_to_retrace if i not in [point_to_remove]]
                         points_to_retrace = tuple(sorted(res1))
                         logging.debug(f"points to retrace = {points_to_retrace}")
-                        path_key = points_to_retrace, prev_last_point, prev_last_time
-                        logging.debug(f"path key = {path_key}")
-                        
-                if len(points_to_retrace) == 1: #this means 0 is the only point left to be assigned to routes
-                    logging.debug(f"points to retrace = {points_to_retrace}")
-                    for i in range(self.number_of_vehicles):
-                        optimal_path[i] = [0] + optimal_path[i]
-                        optimal_path_arrival_times[i] = [0]+optimal_path_arrival_times[i]
-                    logging.debug(f"optimal path = {optimal_path}")
-                    logging.debug(f"optimal path arrival times = {optimal_path_arrival_times}")
-                    point_to_remove = 0
-                    res1 = [i for i in points_to_retrace if i not in [point_to_remove]]
-                    points_to_retrace = tuple(sorted(res1))
-                    logging.debug(f"points to retrace = {points_to_retrace}")
                      
-        start1 = [[] for i in range(self.number_of_vehicles)]
-        logging.debug(f"start1 = {start1}")
-        end1 = [[] for i in range(self.number_of_vehicles)]
-        logging.debug(f"end1 = {end1}")
-        for j in range(self.number_of_vehicles):
-            start1[j] = [self.start_times[i] for i in optimal_path[j]] 
+            start1 = [[] for i in range(self.number_of_vehicles)]
             logging.debug(f"start1 = {start1}")
-            end1[j] = [self.end_times[i] for i in optimal_path[j]]
+            end1 = [[] for i in range(self.number_of_vehicles)]
             logging.debug(f"end1 = {end1}")
-        logging.debug(f"optimal path arrival times = {optimal_path_arrival_times}")
-        logging.debug(f"service times = {self.service_times}")
-        logging.debug(f"start 1 = {start1}")
+            for j in range(self.number_of_vehicles):
+                start1[j] = [self.start_times[i] for i in optimal_path[j]] 
+                logging.debug(f"start1 = {start1}")
+                end1[j] = [self.end_times[i] for i in optimal_path[j]]
+                logging.debug(f"end1 = {end1}")
+            logging.debug(f"optimal path arrival times = {optimal_path_arrival_times}")
+            logging.debug(f"service times = {self.service_times}")
+            logging.debug(f"start 1 = {start1}")
         
            
-        optimal_path_departure_times = [[] for i in range(self.number_of_vehicles)]
-        logging.debug(f"opt path depart = {optimal_path_departure_times}")
-        for i in range(self.number_of_vehicles):
-            logging.debug(f"for vehicle {i}:")
-            for j in range(len(optimal_path[i])):
-                logging.debug(f"for job {optimal_path[i]}")
-                optimal_path_departure_times[i] = optimal_path_departure_times[i] + [max(optimal_path_arrival_times[i][j]+self.service_times[optimal_path[i][j]], start1[i][j])]
-                logging.debug(f"opt path depart = {optimal_path_departure_times}")
-        logging.debug(f"optimal path departure times = {optimal_path_departure_times}")
+            optimal_path_departure_times = [[] for i in range(self.number_of_vehicles)]
+            logging.debug(f"opt path depart = {optimal_path_departure_times}")
+            for i in range(self.number_of_vehicles):
+                logging.debug(f"for vehicle {i}:")
+                for j in range(len(optimal_path[i])):
+                    logging.debug(f"for job {optimal_path[i]}")
+                    optimal_path_departure_times[i] = optimal_path_departure_times[i] + [max(optimal_path_arrival_times[i][j]+self.service_times[optimal_path[i][j]], start1[i][j])]
+                    logging.debug(f"opt path depart = {optimal_path_departure_times}")
+            logging.debug(f"optimal path departure times = {optimal_path_departure_times}")
             
-        self.optimal_cost = optimal_cost
-        self.optimal_path = optimal_path
-        print("time check:")
-        for i in range(self.number_of_vehicles):
-            self.df1 = pd.DataFrame({'opt path[i]': optimal_path[i], 'start[i]': start1[i], 'arrival': optimal_path_arrival_times[i], 'departure[i]': optimal_path_departure_times[i], 'end[i]': end1[i] })
-            print(f"{self.df1}")
+            self.optimal_cost = optimal_cost
+            self.optimal_path = optimal_path
+            print("time check:")
+            for i in range(self.number_of_vehicles):
+                self.df1 = pd.DataFrame({'opt path[i]': optimal_path[i], 'start[i]': start1[i], 'arrival': optimal_path_arrival_times[i], 'departure[i]': optimal_path_departure_times[i], 'end[i]': end1[i] })
+                print(f"{self.df1}")
         return self.optimal_path, self.optimal_cost
 
-    def VRP_Solve(self, DUP, TW, SJA, WJA, JAU, DOM, T1, T2):
+    def VRP_Solve(self, DUP, TW, SJA, DOM, T1, T2):
         
         self.all_points_set = [x for x in range(self.number_of_jobs)]
         self.special_values()
-        self.queue = [(tuple([0]), tuple(self.prev_last_point), tuple(self.prev_time))]
-        self.memo [tuple([0]), tuple(self.prev_last_point), tuple(self.prev_time)] = (tuple([self.prev_dist, self.prev_last_point, self.prev_time, self.vehicle_order])) 
-        while self.queue:
-            self.prev_visited, self.prev_last_point, self.prev_time = self.queue.pop(0)
-            logging.debug(f"extending label {self.prev_visited}, {self.prev_last_point}, {self.prev_time}")
+        self.queue.put((tuple([0]), tuple(self.prev_last_point), tuple(self.prev_time), self.key_version))
+        self.memo [tuple([0]), tuple(self.prev_last_point), tuple(self.prev_time), self.key_version] = (tuple([self.prev_dist, self.prev_last_point, self.prev_time, self.vehicle_order, self.prev_key_version])) 
+        counter = 0
+        
+        while self.queue.qsize() != 0:
+            if (time.time() - self.t) > 3600:
+                self.stopper = True
+                break
+                  
+            self.prev_visited, self.prev_last_point, self.prev_time, self.prev_key_version = self.queue.get()
             
-            self.prev_dist, _, _, self.vehicle_order = self.memo[(tuple(self.prev_visited), tuple(self.prev_last_point), tuple(self.prev_time))]
+            while self.memo.get((tuple(self.prev_visited), tuple(self.prev_last_point), tuple(self.prev_time), self.prev_key_version)) == None:
+                self.prev_visited, self.prev_last_point, self.prev_time, self.prev_key_version = self.queue.get()
+            logging.debug(f"extending label {self.prev_visited}, {self.prev_last_point}, {self.prev_time}, {self.prev_key_version}")
+            if len(self.prev_visited) != counter:
+                print(f"progress check: {len(self.prev_visited)} cities of {self.number_of_jobs} cities visited, the running time is {time.time() - self.t}, and {len(self.memo)} labels have been created")
+                counter = counter + 1
+            self.prev_dist, _, _, self.vehicle_order, _ = self.memo[(tuple(self.prev_visited), tuple(self.prev_last_point), tuple(self.prev_time), self.prev_key_version)]
             logging.debug(f"previously visited set = {self.prev_visited}")
             logging.debug(f"previous last point = {self.prev_last_point}")
             logging.debug(f"previous time = {self.prev_time}")
@@ -1470,7 +995,7 @@ class VRP_Problem:
             
             logging.debug(f"to visit set = {to_visit}")
             for i in range(self.number_of_vehicles):
-                
+            
                 logging.info(f"for vehicle {i}")
                 self.new_last_point[i-1] = self.prev_last_point[i-1]
                 self.new_dist[i-1] = self.prev_dist[i-1]
@@ -1484,16 +1009,15 @@ class VRP_Problem:
                     self.new_dist[i] = float(np.round(self.prev_dist[i] + self.distances_array[self.prev_last_point[i]][self.new_last_point[i]],2))
                     self.new_time[i] = float(np.round(max(self.prev_time[i], self.start_times[self.prev_last_point[i]]) + self.service_times[self.prev_last_point[i]] + self.travel_times_array[self.prev_last_point[i]][self.new_last_point[i]],2))
                     logging.info(f"checking the new label ({self.new_visited},{self.new_last_point},{self.new_time}) with distances {self.new_dist}")
-                    
                     self.sorted_nlp, self.sorted_nt, self.sorted_nd, self.sorted_vo = zip(*sorted(zip(self.new_last_point, self.new_time, self.new_dist, self.vehicle_order)))
-                    self.label_check = {k: v for k, v in self.memo.items() if k[0]==self.new_visited and k[1]==self.sorted_nlp}
+                    self.prefix_search2()
                     if DUP:
                         if not self.duplicate_label_check_VRP_update2():
                             continue
                     else:
                         logging.info(f"duplicate label check not being used")
-                    
-                   
+                
+               
                     if TW:
                         if not self.VRP_time_window_check():
                             continue
@@ -1503,23 +1027,10 @@ class VRP_Problem:
                     if SJA:
                         if not self.strong_jump_ahead_check():
                             continue
-                    
+                
                     else:
-                        logging.info(f"strong jump ahead test is not being used.")
+                        logging.info(f"strong jump ahead test is not being used.")    
                     
-                    if WJA:
-                        if not self.weak_jump_ahead_check():
-                            continue
-                    
-                    else:
-                        logging.info(f"weak jump ahead test is not being used.")
-                    
-                    if JAU:
-                        if not self.jump_ahead_update():
-                            continue
-                        else:
-                            logging.info("jump ahead update is not being used.")
-
                     logging.info(f"tests started")
                     if T2:
                         self.before_VRP()
@@ -1528,8 +1039,7 @@ class VRP_Problem:
                             continue           
                     else:
                         logging.info(f"test 2 is not being used")
-                    
-                    #self.shortcut_search()
+                
                     if T1:                    
                         if not self.VRP_test1A():
                             logging.debug(f"tests ended, label rejected")
@@ -1537,32 +1047,39 @@ class VRP_Problem:
 
                     else:
                         logging.info(f"test 1 is not being used")
-                    
+                
                     logging.info(f"tests ended")
-                    #if len(self.new_visited) == 7:
-                        #input()
-                    if DOM:
-                        self.VRP_dominance_test_update2()
-                    else:
-                        if (tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)) in self.queue:
-                            while (tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)) in self.queue:
-                                self.duplicate_dictionary_workaround()
-                            
-                            self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo)
-                            self.queue.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))       
-                        else:
-                            self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt))] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo)
-                            self.queue.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt)))
                     
-        #logging.debug(f"queue = {self.queue}")
-        #logging.debug(f"memo = {self.memo}")
+                    if DOM:
+                        self.VRP_dominance_test_update4()
+                    else:
+                        if (tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version) in self.memo:
+                            while (tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version) in self.memo:
+                                self.key_version = self.key_version + 1
+                        
+                            self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo, self.prev_key_version)
+                            self.queue.put((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version))       
+                            temp = self.prefix_memo[(tuple(self.new_visited), tuple(self.sorted_nlp))]
+                            temp.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version))
+                            self.prefix_memo[(tuple(self.new_visited), tuple(self.sorted_nlp))] = temp
+                        else:
+                            self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)] = (self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo, self.prev_key_version)
+                            self.queue.put((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version))
+                            if (tuple(self.new_visited), tuple(self.sorted_nlp)) in self.prefix_memo:
+                                temp = self.prefix_memo[(tuple(self.new_visited), tuple(self.sorted_nlp))]
+                                temp.append((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version))
+                                self.prefix_memo[(tuple(self.new_visited), tuple(self.sorted_nlp))] = temp
+                            else:
+                                self.prefix_memo[(tuple(self.new_visited), tuple(self.sorted_nlp))] = [(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)]
 
+        logging.debug(f"memo = {self.memo}")
+        
         self.optimal_path, self.optimal_cost = self.retrace_optimal_path_VRP(self.memo, self.number_of_jobs)
     
         return self.optimal_path, self.optimal_cost, self.df1
 
 #main solver
-    def Solver(self, read_in_data, data, random_data, instances, timeframe, locationframe, servicetime, serviceframe, travel_times_multiplier, save_name, DUP, TW, T1, T2, T3, SJA, WJA, JAU, DOM):
+    def Solver(self, read_in_data, data, random_data, instances, timeframe, locationframe, servicetime, serviceframe, travel_times_multiplier, save_name, DUP, TW, T1, T2, T3, SJA, DOM):
         self.reset_problem()
         if read_in_data == True:
             self.read_in_data(data, travel_times_multiplier)
@@ -1582,21 +1099,22 @@ class VRP_Problem:
         else:
             logging.debug(f"VRP situation")
             self.t = time.time()
-            self.VRP_Solve(DUP, TW, SJA, WJA, JAU, DOM, T1, T2)
-            #self.retrace_optimal_path_VRP(self.memo, self.number_of_jobs )
+            self.VRP_Solve(DUP, TW, SJA, DOM, T1, T2)
             self.run_time = round(time.time() - self.t, 3)
-        print(f"the memo length is {len(self.memo)}")
-        if self.number_of_vehicles == 1:
-            print(f"the length of the test 3 rejected labels is {self.test3_rejected_labels}")
-        print(f"Found optimal path in {self.run_time} seconds.") 
-        print(f"Optimal cost: {self.optimal_cost}, optimal path: {self.optimal_path}")
-        print(f"duplicate label check rejected {self.dup_lab_rejected} labels.")
-        print(f"time window check rejected {self.TW_rejected} labels.")
-        print(f"jump ahead check rejected {self.jump_ahead_rejected} labels.")
-        print(f"test 2 rejected {self.test2_rejected} labels.")
-        print(f"test 1 rejected {self.test1_rejected} labels.")
-        print(f"dominance check rejected {self.dom_lab_rejected} labels.")
-        print(f"{self.labels_considered} were considered")
+        if self.stopper == False:            
+            print(f"the memo length is {len(self.memo)}")
+            if self.number_of_vehicles == 1:
+                print(f"the length of the test 3 rejected labels is {self.test3_rejected_labels}")
+            print(f"Found optimal path in {self.run_time} seconds.") 
+            print(f"Optimal cost: {self.optimal_cost}, optimal path: {self.optimal_path}")
+            print(f"duplicate label check rejected {self.dup_lab_rejected} labels.")
+            print(f"time window check rejected {self.TW_rejected} labels.")
+            print(f"jump ahead check rejected {self.jump_ahead_rejected} labels.")
+            print(f"test 2 rejected {self.test2_rejected} labels.")
+            print(f"test 1 rejected {self.test1_rejected} labels.")
+            print(f"dominance check rejected {self.dom_lab_rejected} labels.")
+            print(f"{self.labels_considered} were considered")
+            
         return
 
     
@@ -1609,32 +1127,57 @@ names10 = ['VRP_testing_10_jobs_1', 'VRP_testing_10_jobs_2', 'VRP_testing_10_job
 names15 = ['VRP_testing_15_jobs_1', 'VRP_testing_15_jobs_2', 'VRP_testing_15_jobs_3', 'VRP_testing_15_jobs_4', 'VRP_testing_15_jobs_5']
 names20 = ['VRP_testing_20_jobs_1', 'VRP_testing_20_jobs_2', 'VRP_testing_20_jobs_3', 'VRP_testing_20_jobs_4', 'VRP_testing_20_jobs_5']
 names25 = ['VRP_testing_25_jobs_1', 'VRP_testing_25_jobs_2', 'VRP_testing_25_jobs_3', 'VRP_testing_25_jobs_4', 'VRP_testing_25_jobs_5']
+big_names = ['VRP_testing_15_jobs_1', 'VRP_testing_15_jobs_2', 'VRP_testing_15_jobs_3', 'VRP_testing_15_jobs_4', 'VRP_testing_15_jobs_5', 'VRP_testing_20_jobs_1', 'VRP_testing_20_jobs_2', 'VRP_testing_20_jobs_3', 'VRP_testing_20_jobs_4', 'VRP_testing_20_jobs_5', 'VRP_testing_25_jobs_1', 'VRP_testing_25_jobs_2', 'VRP_testing_25_jobs_3', 'VRP_testing_25_jobs_4', 'VRP_testing_25_jobs_5']
 
 
-#wja = [False, False, True, False]
-#jau = [False, False, False, True]
+t1 = [False, False, True, True]
+t2 = [False, True, False, True]
+for i in range(len(names15)):
+    for j in {0,1,2,3}:
+        print(f"data set = {names15[i]}")
+        print(f"TW = True")
+        print(f"DUP = True")
+        print(f"SJA = True")
+        print(f"DOM = True")
+        print(f"T1 = {t1[j]}")
+        print(f"T2 = {t2[j]}")
+        pr = cProfile.Profile()
+        pr.enable()
+        a.Solver(read_in_data = True, data = names15[i], random_data = False, instances = 7, timeframe = 2000, locationframe = 100, servicetime = True, serviceframe = 25, travel_times_multiplier = 1, save_name = big_names[i], DUP = True, TW = True, T1 = t1[j], T2 = t2[j], T3 = False, SJA = True, DOM = True)
+        print(f"###COMPLETE_RESULTS:, {names10[i]}, T1 = {t1[j]}, T2 = {t2[j]}, {a.run_time}, {a.optimal_cost}, {a.optimal_path}, {len(a.memo)}")
+        pr.disable()
+        s = io.StringIO()
+        sortby = SortKey.CUMULATIVE
+        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+        ps.print_stats(.1)
+        print(s.getvalue())
+        
+        
 t1 = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True]
 t2 = [False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True]
 dom = [False, False, False, False, True, True, True, True, False, False, False, False, True, True, True, True, False, False, False, False, True, True, True, True, False, False, False, False, True, True, True, True]
 dup = [False, False, True, True, False, False, True, True, False, False, True, True, False, False, True, True, False, False, True, True, False, False, True, True, False, False, True, True, False, False, True, True]
 sja = [False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True]
 
-
-
+input()
 
 for i in range(len(names)):
-    for j in range(len(dom)):
+    for j in range(len(dom)):    
         print(f"data set = {names[i]}")
         print(f"TW = True")
         print(f"DUP = {dup[j]}")
         print(f"SJA = {sja[j]}")
-        #print(f"WJA = {wja[j]}")
-        #print(f"JAU = {jau[j]}")
         print(f"T1 = {t1[j]}")
         print(f"T2 = {t2[j]}")
         print(f"DOM = {dom[j]}")
-        a.Solver(read_in_data = True, data = names[i], random_data = False, instances = 7, timeframe = 2000, locationframe = 100, servicetime = True, serviceframe = 25, travel_times_multiplier = 1, save_name = names[i], DUP = dup[j], TW = True, T1 = t1[j], T2 = t2[j], T3 = False, SJA = sja[j], WJA = False, JAU = False, DOM = dom[j])
-            
-
-
-
+        if dup[j] == False and sja[j] == False and t1[j] == False and t2[j] == False and dom[j] == False:
+            print("this instance is skipped")
+        elif dup[j] == False and sja[j] == False and t1[j] == False and t2[j] == True and dom[j] == False:
+            print("this instance is skipped")
+        elif dup[j] == False and sja[j] == False and t1[j] == True and t2[j] == False and dom[j] == False:
+            print("this instance is skipped")
+        elif dup[j] == False and sja[j] == False and t1[j] == True and t2[j] == True and dom[j] == False:
+            print("this instance is skipped")
+        else:
+            a.Solver(read_in_data = True, data = names[i], random_data = False, instances = 7, timeframe = 2000, locationframe = 100, servicetime = True, serviceframe = 25, travel_times_multiplier = 1, save_name = names[i], DUP = dup[j], TW = True, T1 = t1[j], T2 = t2[j], T3 = False, SJA = sja[j], DOM = dom[j])
+            print(f"###COMPLETE_RESULTS:, {names[i]}, {dup[j]}, {sja[j]}, {t1[j]}, {t2[j]}, {dom[j]}, {a.run_time}, {a.optimal_cost}, {a.optimal_path}, {len(a.memo)}")

@@ -1,0 +1,648 @@
+C:\Users\akulick\PycharmProjects\pythonProject\venv\Scripts\python.exe C:/Users/akulick/PycharmProjects/pythonProject/main.py
+TW = True
+DUP = True
+SJA = True
+DOM = True
+T1 = False
+T2 = False
+    xcoord  ycoord  start time  end time  service time
+0        0       0           0      2000             0
+1        1       0           1         2             1
+2        2       0           3         4             1
+3        3       0           5         6             1
+4        4       0           7         8             1
+5        5       0           9        10             1
+6        6       0          11        12             1
+7        7       0          13        14             1
+8        8       0          15        16             1
+9        9       0          17        18             1
+10      10       0          19        20             1
+11      -1       0           1         2             1
+12      -2       0           3         4             1
+13      -3       0           5         6             1
+14      -4       0           7         8             1
+15      -5       0           9        10             1
+16      -6       0          11        12             1
+17      -7       0          13        14             1
+18      -8       0          15        16             1
+19      -9       0          17        18             1
+20     -10       0          19        20             1
+progress check: 1 cities of 21 cities visited, the running time is 0.010004520416259766, and 1 labels have been created
+progress check: 2 cities of 21 cities visited, the running time is 0.023013591766357422, and 3 labels have been created
+progress check: 3 cities of 21 cities visited, the running time is 0.04502058029174805, and 4 labels have been created
+progress check: 4 cities of 21 cities visited, the running time is 0.054027557373046875, and 6 labels have been created
+progress check: 5 cities of 21 cities visited, the running time is 0.07002615928649902, and 7 labels have been created
+progress check: 6 cities of 21 cities visited, the running time is 0.0770273208618164, and 9 labels have been created
+progress check: 7 cities of 21 cities visited, the running time is 0.09402751922607422, and 10 labels have been created
+progress check: 8 cities of 21 cities visited, the running time is 0.10002732276916504, and 12 labels have been created
+progress check: 9 cities of 21 cities visited, the running time is 0.10902690887451172, and 13 labels have been created
+progress check: 10 cities of 21 cities visited, the running time is 0.11302757263183594, and 15 labels have been created
+progress check: 11 cities of 21 cities visited, the running time is 0.12102818489074707, and 16 labels have been created
+progress check: 12 cities of 21 cities visited, the running time is 0.12602829933166504, and 18 labels have been created
+progress check: 13 cities of 21 cities visited, the running time is 0.13202762603759766, and 19 labels have been created
+progress check: 14 cities of 21 cities visited, the running time is 0.13502788543701172, and 21 labels have been created
+progress check: 15 cities of 21 cities visited, the running time is 0.13902783393859863, and 22 labels have been created
+progress check: 16 cities of 21 cities visited, the running time is 0.1420271396636963, and 24 labels have been created
+progress check: 17 cities of 21 cities visited, the running time is 0.14502763748168945, and 25 labels have been created
+progress check: 18 cities of 21 cities visited, the running time is 0.14702725410461426, and 27 labels have been created
+progress check: 19 cities of 21 cities visited, the running time is 0.14902734756469727, and 28 labels have been created
+progress check: 20 cities of 21 cities visited, the running time is 0.15002751350402832, and 30 labels have been created
+progress check: 21 cities of 21 cities visited, the running time is 0.15102815628051758, and 31 labels have been created
+time check:
+    opt path[i]  start[i]  arrival  departure[i]  end[i]
+0             0         0      0.0           0.0    2000
+1             1         1      1.0           2.0       2
+2             2         3      3.0           4.0       4
+3             3         5      5.0           6.0       6
+4             4         7      7.0           8.0       8
+5             5         9      9.0          10.0      10
+6             6        11     11.0          12.0      12
+7             7        13     13.0          14.0      14
+8             8        15     15.0          16.0      16
+9             9        17     17.0          18.0      18
+10           10        19     19.0          20.0      20
+11            0         0     30.0          30.0    2000
+    opt path[i]  start[i]  arrival  departure[i]  end[i]
+0             0         0      0.0           0.0    2000
+1            11         1      1.0           2.0       2
+2            12         3      3.0           4.0       4
+3            13         5      5.0           6.0       6
+4            14         7      7.0           8.0       8
+5            15         9      9.0          10.0      10
+6            16        11     11.0          12.0      12
+7            17        13     13.0          14.0      14
+8            18        15     15.0          16.0      16
+9            19        17     17.0          18.0      18
+10           20        19     19.0          20.0      20
+11            0         0     30.0          30.0    2000
+the memo length is 31
+Found optimal path in 0.207 seconds.
+Optimal cost: (20.0, 20.0), optimal path: [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0], [0, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 0]]
+duplicate label check rejected 12 labels.
+time window check rejected 0 labels.
+jump ahead check rejected 396 labels.
+test 2 rejected 0 labels.
+test 1 rejected 0 labels.
+dominance check rejected 0 labels.
+620 were considered
+###COMPLETE_RESULTS:, VRP_testing_1_label, T1 = False, T2 = False, 0.207, (20.0, 20.0), [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0], [0, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 0]], 31
+         207327 function calls (204583 primitive calls) in 0.240 seconds
+
+   Ordered by: cumulative time
+   List reduced from 774 to 77 due to restriction <0.1>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.242    0.242 C:\Users\akulick\PycharmProjects\pythonProject\main.py:1174(Solver)
+        1    0.019    0.019    0.207    0.207 C:\Users\akulick\PycharmProjects\pythonProject\main.py:1038(VRP_Solve)
+        3    0.000    0.000    0.070    0.023 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\frame.py:785(__repr__)
+        3    0.000    0.000    0.069    0.023 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\frame.py:859(to_string)
+        3    0.000    0.000    0.068    0.023 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1010(to_string)
+        3    0.000    0.000    0.066    0.022 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\string.py:22(to_string)
+        3    0.000    0.000    0.066    0.022 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\string.py:34(_get_string_representation)
+        1    0.001    0.001    0.056    0.056 C:\Users\akulick\PycharmProjects\pythonProject\main.py:902(retrace_optimal_path_VRP)
+      426    0.022    0.000    0.048    0.000 C:\Users\akulick\PycharmProjects\pythonProject\main.py:672(strong_jump_ahead_check)
+        3    0.000    0.000    0.045    0.015 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\string.py:148(_fit_strcols_to_terminal_width)
+    21506    0.023    0.000    0.041    0.000 C:\Users\akulick\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py:2099(debug)
+        6    0.000    0.000    0.039    0.007 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\string.py:28(_get_strcols)
+        6    0.000    0.000    0.039    0.006 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:515(get_strcols)
+        6    0.001    0.000    0.038    0.006 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:749(_get_strcols_without_index)
+3458/1775    0.006    0.000    0.032    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+       30    0.000    0.000    0.027    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:796(format_col)
+     1242    0.001    0.000    0.026    0.000 <__array_function__ internals>:2(round_)
+       36    0.001    0.000    0.022    0.001 {built-in method builtins.print}
+     1242    0.001    0.000    0.021    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\fromnumeric.py:3709(round_)
+      608    0.009    0.000    0.021    0.000 C:\Users\akulick\PycharmProjects\pythonProject\main.py:649(VRP_time_window_check)
+     1242    0.002    0.000    0.020    0.000 <__array_function__ internals>:2(around)
+        3    0.000    0.000    0.020    0.007 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\string.py:158(<listcomp>)
+       30    0.000    0.000    0.019    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1142(format_array)
+       99    0.001    0.000    0.019    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\series.py:238(__init__)
+       30    0.000    0.000    0.016    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1248(get_result)
+     1242    0.001    0.000    0.016    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\fromnumeric.py:3199(around)
+    21506    0.009    0.000    0.016    0.000 C:\Users\akulick\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py:1424(debug)
+     1242    0.001    0.000    0.015    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\fromnumeric.py:52(_wrapfunc)
+        1    0.000    0.000    0.013    0.013 C:\Users\akulick\PycharmProjects\pythonProject\main.py:154(read_in_data)
+     1240    0.013    0.000    0.013    0.000 {method 'round' of 'numpy.generic' objects}
+        8    0.000    0.000    0.012    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1493(_format_strings)
+        8    0.001    0.000    0.012    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1394(get_result_as_array)
+     4988    0.006    0.000    0.011    0.000 C:\Users\akulick\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py:2089(info)
+        8    0.000    0.000    0.010    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1419(format_values_with)
+       66    0.001    0.000    0.010    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\construction.py:423(sanitize_array)
+        1    0.000    0.000    0.010    0.010 C:\Users\akulick\PycharmProjects\pythonProject\main.py:167(<listcomp>)
+       18    0.000    0.000    0.009    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\series.py:4009(apply)
+      620    0.005    0.000    0.009    0.000 C:\Users\akulick\PycharmProjects\pythonProject\main.py:526(duplicate_label_check_VRP_update2)
+        1    0.000    0.000    0.009    0.009 C:\Users\akulick\PycharmProjects\pythonProject\main.py:251(special_values)
+        8    0.000    0.000    0.008    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1847(_trim_zeros_float)
+    26494    0.008    0.000    0.008    0.000 C:\Users\akulick\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py:1689(isEnabledFor)
+      441    0.000    0.000    0.008    0.000 <__array_function__ internals>:2(norm)
+        1    0.000    0.000    0.007    0.007 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\arrayprint.py:1500(_array_str_implementation)
+        1    0.000    0.000    0.007    0.007 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\arrayprint.py:516(array2string)
+        1    0.000    0.000    0.007    0.007 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\arrayprint.py:461(wrapper)
+        1    0.000    0.000    0.007    0.007 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\arrayprint.py:478(_array2string)
+       30    0.000    0.000    0.007    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\indexing.py:882(__getitem__)
+        3    0.000    0.000    0.007    0.002 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\frame.py:502(__init__)
+        3    0.000    0.000    0.007    0.002 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\internals\construction.py:241(init_dict)
+      441    0.003    0.000    0.007    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\linalg\linalg.py:2362(norm)
+        6    0.000    0.000    0.007    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:821(_get_formatted_column_labels)
+       30    0.000    0.000    0.006    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\indexing.py:1448(_getitem_tuple)
+      620    0.003    0.000    0.006    0.000 C:\Users\akulick\PycharmProjects\pythonProject\main.py:880(prefix_search2)
+     9237    0.004    0.000    0.006    0.000 {built-in method builtins.isinstance}
+     1344    0.001    0.000    0.006    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1858(is_number_with_decimal)
+       66    0.001    0.000    0.006    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1775(_make_fixed_width)
+36608/36255    0.005    0.000    0.005    0.000 {built-in method builtins.len}
+        1    0.000    0.000    0.005    0.005 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\arrayprint.py:736(_formatArray)
+    463/1    0.001    0.000    0.005    0.005 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\arrayprint.py:745(recurser)
+        3    0.000    0.000    0.005    0.002 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\internals\construction.py:62(arrays_to_mgr)
+     1344    0.001    0.000    0.005    0.000 C:\Users\akulick\AppData\Local\Programs\Python\Python39\lib\re.py:188(match)
+       30    0.000    0.000    0.005    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\indexing.py:782(_getitem_lowerdim)
+       56    0.000    0.000    0.004    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\internals\blocks.py:2721(make_block)
+       56    0.000    0.000    0.004    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1861(should_trim)
+       51    0.000    0.000    0.004    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\internals\managers.py:1577(from_array)
+       30    0.003    0.000    0.004    0.000 C:\Users\akulick\PycharmProjects\pythonProject\main.py:775(VRP_dominance_test_update4)
+     4988    0.002    0.000    0.004    0.000 C:\Users\akulick\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py:1436(info)
+       71    0.001    0.000    0.004    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\internals\blocks.py:2672(get_block_type)
+       21    0.000    0.000    0.004    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\generic.py:11181(max)
+       21    0.000    0.000    0.004    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\generic.py:10720(max)
+       21    0.000    0.000    0.004    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\generic.py:10690(_stat_function)
+       30    0.000    0.000    0.004    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\indexing.py:1479(_getitem_axis)
+      935    0.001    0.000    0.003    0.000 {built-in method builtins.max}
+       21    0.000    0.000    0.003    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\series.py:4149(_reduce)
+       56    0.001    0.000    0.003    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1869(<listcomp>)
+        6    0.000    0.000    0.003    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\generic.py:5680(dtypes)
+      272    0.000    0.000    0.003    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\_config\config.py:232(__call__)
+
+
+
+TW = True
+DUP = True
+SJA = True
+DOM = True
+T1 = False
+T2 = True
+    xcoord  ycoord  start time  end time  service time
+0        0       0           0      2000             0
+1        1       0           1         2             1
+2        2       0           3         4             1
+3        3       0           5         6             1
+4        4       0           7         8             1
+5        5       0           9        10             1
+6        6       0          11        12             1
+7        7       0          13        14             1
+8        8       0          15        16             1
+9        9       0          17        18             1
+10      10       0          19        20             1
+11      -1       0           1         2             1
+12      -2       0           3         4             1
+13      -3       0           5         6             1
+14      -4       0           7         8             1
+15      -5       0           9        10             1
+16      -6       0          11        12             1
+17      -7       0          13        14             1
+18      -8       0          15        16             1
+19      -9       0          17        18             1
+20     -10       0          19        20             1
+progress check: 1 cities of 21 cities visited, the running time is 0.012521505355834961, and 1 labels have been created
+progress check: 2 cities of 21 cities visited, the running time is 0.023525238037109375, and 3 labels have been created
+progress check: 3 cities of 21 cities visited, the running time is 0.04753518104553223, and 4 labels have been created
+progress check: 4 cities of 21 cities visited, the running time is 0.05607414245605469, and 6 labels have been created
+progress check: 5 cities of 21 cities visited, the running time is 0.07507967948913574, and 7 labels have been created
+progress check: 6 cities of 21 cities visited, the running time is 0.08307504653930664, and 9 labels have been created
+progress check: 7 cities of 21 cities visited, the running time is 0.09407496452331543, and 10 labels have been created
+progress check: 8 cities of 21 cities visited, the running time is 0.10007500648498535, and 12 labels have been created
+progress check: 9 cities of 21 cities visited, the running time is 0.11307501792907715, and 13 labels have been created
+progress check: 10 cities of 21 cities visited, the running time is 0.12007522583007812, and 15 labels have been created
+progress check: 11 cities of 21 cities visited, the running time is 0.1310749053955078, and 16 labels have been created
+progress check: 12 cities of 21 cities visited, the running time is 0.13607501983642578, and 18 labels have been created
+progress check: 13 cities of 21 cities visited, the running time is 0.1440737247467041, and 19 labels have been created
+progress check: 14 cities of 21 cities visited, the running time is 0.14707350730895996, and 21 labels have been created
+progress check: 15 cities of 21 cities visited, the running time is 0.15207386016845703, and 22 labels have been created
+progress check: 16 cities of 21 cities visited, the running time is 0.15407347679138184, and 24 labels have been created
+progress check: 17 cities of 21 cities visited, the running time is 0.15807557106018066, and 25 labels have been created
+progress check: 18 cities of 21 cities visited, the running time is 0.15907835960388184, and 27 labels have been created
+progress check: 19 cities of 21 cities visited, the running time is 0.16108298301696777, and 28 labels have been created
+progress check: 20 cities of 21 cities visited, the running time is 0.1620781421661377, and 30 labels have been created
+progress check: 21 cities of 21 cities visited, the running time is 0.16307592391967773, and 31 labels have been created
+time check:
+    opt path[i]  start[i]  arrival  departure[i]  end[i]
+0             0         0      0.0           0.0    2000
+1             1         1      1.0           2.0       2
+2             2         3      3.0           4.0       4
+3             3         5      5.0           6.0       6
+4             4         7      7.0           8.0       8
+5             5         9      9.0          10.0      10
+6             6        11     11.0          12.0      12
+7             7        13     13.0          14.0      14
+8             8        15     15.0          16.0      16
+9             9        17     17.0          18.0      18
+10           10        19     19.0          20.0      20
+11            0         0     30.0          30.0    2000
+    opt path[i]  start[i]  arrival  departure[i]  end[i]
+0             0         0      0.0           0.0    2000
+1            11         1      1.0           2.0       2
+2            12         3      3.0           4.0       4
+3            13         5      5.0           6.0       6
+4            14         7      7.0           8.0       8
+5            15         9      9.0          10.0      10
+6            16        11     11.0          12.0      12
+7            17        13     13.0          14.0      14
+8            18        15     15.0          16.0      16
+9            19        17     17.0          18.0      18
+10           20        19     19.0          20.0      20
+11            0         0     30.0          30.0    2000
+the memo length is 31
+Found optimal path in 0.216 seconds.
+Optimal cost: (20.0, 20.0), optimal path: [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0], [0, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 0]]
+duplicate label check rejected 12 labels.
+time window check rejected 0 labels.
+jump ahead check rejected 396 labels.
+test 2 rejected 0 labels.
+test 1 rejected 0 labels.
+dominance check rejected 0 labels.
+620 were considered
+###COMPLETE_RESULTS:, VRP_testing_1_label, T1 = False, T2 = True, 0.216, (20.0, 20.0), [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0], [0, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 0]], 31
+         206822 function calls (204317 primitive calls) in 0.249 seconds
+
+   Ordered by: cumulative time
+   List reduced from 618 to 62 due to restriction <0.1>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.251    0.251 C:\Users\akulick\PycharmProjects\pythonProject\main.py:1174(Solver)
+        1    0.021    0.021    0.216    0.216 C:\Users\akulick\PycharmProjects\pythonProject\main.py:1038(VRP_Solve)
+        3    0.000    0.000    0.068    0.023 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\frame.py:785(__repr__)
+        3    0.000    0.000    0.067    0.022 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\frame.py:859(to_string)
+        3    0.000    0.000    0.066    0.022 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1010(to_string)
+        3    0.000    0.000    0.066    0.022 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\string.py:22(to_string)
+        3    0.000    0.000    0.066    0.022 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\string.py:34(_get_string_representation)
+        1    0.001    0.001    0.053    0.053 C:\Users\akulick\PycharmProjects\pythonProject\main.py:902(retrace_optimal_path_VRP)
+      426    0.023    0.000    0.049    0.000 C:\Users\akulick\PycharmProjects\pythonProject\main.py:672(strong_jump_ahead_check)
+        3    0.000    0.000    0.044    0.015 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\string.py:148(_fit_strcols_to_terminal_width)
+        6    0.000    0.000    0.040    0.007 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\string.py:28(_get_strcols)
+        6    0.000    0.000    0.040    0.007 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:515(get_strcols)
+    21566    0.023    0.000    0.040    0.000 C:\Users\akulick\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py:2099(debug)
+        6    0.001    0.000    0.039    0.006 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:749(_get_strcols_without_index)
+3458/1775    0.007    0.000    0.036    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+       30    0.000    0.000    0.029    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:796(format_col)
+     1242    0.001    0.000    0.028    0.000 <__array_function__ internals>:2(round_)
+     1242    0.001    0.000    0.023    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\fromnumeric.py:3709(round_)
+      608    0.009    0.000    0.022    0.000 C:\Users\akulick\PycharmProjects\pythonProject\main.py:649(VRP_time_window_check)
+     1242    0.002    0.000    0.022    0.000 <__array_function__ internals>:2(around)
+       36    0.001    0.000    0.021    0.001 {built-in method builtins.print}
+       30    0.001    0.000    0.021    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1142(format_array)
+        3    0.000    0.000    0.019    0.006 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\string.py:158(<listcomp>)
+     1242    0.002    0.000    0.018    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\fromnumeric.py:3199(around)
+       30    0.000    0.000    0.018    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1248(get_result)
+       99    0.001    0.000    0.018    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\series.py:238(__init__)
+     1242    0.001    0.000    0.016    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\fromnumeric.py:52(_wrapfunc)
+        1    0.000    0.000    0.015    0.015 C:\Users\akulick\PycharmProjects\pythonProject\main.py:154(read_in_data)
+    21566    0.009    0.000    0.015    0.000 C:\Users\akulick\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py:1424(debug)
+     1240    0.014    0.000    0.014    0.000 {method 'round' of 'numpy.generic' objects}
+        8    0.000    0.000    0.013    0.002 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1493(_format_strings)
+        8    0.000    0.000    0.013    0.002 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1394(get_result_as_array)
+        1    0.000    0.000    0.012    0.012 C:\Users\akulick\PycharmProjects\pythonProject\main.py:251(special_values)
+        1    0.000    0.000    0.012    0.012 C:\Users\akulick\PycharmProjects\pythonProject\main.py:167(<listcomp>)
+        8    0.000    0.000    0.012    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1419(format_values_with)
+     4988    0.006    0.000    0.011    0.000 C:\Users\akulick\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py:2089(info)
+      620    0.006    0.000    0.010    0.000 C:\Users\akulick\PycharmProjects\pythonProject\main.py:526(duplicate_label_check_VRP_update2)
+        8    0.000    0.000    0.010    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1847(_trim_zeros_float)
+        1    0.000    0.000    0.010    0.010 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\arrayprint.py:1500(_array_str_implementation)
+      441    0.001    0.000    0.010    0.000 <__array_function__ internals>:2(norm)
+        1    0.000    0.000    0.010    0.010 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\arrayprint.py:516(array2string)
+        1    0.000    0.000    0.010    0.010 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\arrayprint.py:461(wrapper)
+        1    0.000    0.000    0.010    0.010 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\arrayprint.py:478(_array2string)
+       18    0.000    0.000    0.009    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\series.py:4009(apply)
+       66    0.001    0.000    0.008    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\construction.py:423(sanitize_array)
+      441    0.004    0.000    0.008    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\linalg\linalg.py:2362(norm)
+     1344    0.001    0.000    0.008    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1858(is_number_with_decimal)
+       30    0.000    0.000    0.007    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\indexing.py:882(__getitem__)
+    26554    0.007    0.000    0.007    0.000 C:\Users\akulick\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py:1689(isEnabledFor)
+      620    0.004    0.000    0.007    0.000 C:\Users\akulick\PycharmProjects\pythonProject\main.py:880(prefix_search2)
+     1344    0.001    0.000    0.007    0.000 C:\Users\akulick\AppData\Local\Programs\Python\Python39\lib\re.py:188(match)
+       30    0.000    0.000    0.007    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\indexing.py:1448(_getitem_tuple)
+       66    0.001    0.000    0.006    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1775(_make_fixed_width)
+        6    0.000    0.000    0.006    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:821(_get_formatted_column_labels)
+     9127    0.004    0.000    0.005    0.000 {built-in method builtins.isinstance}
+36589/36241    0.005    0.000    0.005    0.000 {built-in method builtins.len}
+        3    0.000    0.000    0.005    0.002 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\frame.py:502(__init__)
+        1    0.000    0.000    0.005    0.005 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\arrayprint.py:736(_formatArray)
+    463/1    0.001    0.000    0.005    0.005 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\arrayprint.py:745(recurser)
+        3    0.000    0.000    0.005    0.002 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\internals\construction.py:241(init_dict)
+       56    0.000    0.000    0.005    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1861(should_trim)
+       30    0.000    0.000    0.005    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\indexing.py:782(_getitem_lowerdim)
+
+
+
+TW = True
+DUP = True
+SJA = True
+DOM = True
+T1 = True
+T2 = False
+    xcoord  ycoord  start time  end time  service time
+0        0       0           0      2000             0
+1        1       0           1         2             1
+2        2       0           3         4             1
+3        3       0           5         6             1
+4        4       0           7         8             1
+5        5       0           9        10             1
+6        6       0          11        12             1
+7        7       0          13        14             1
+8        8       0          15        16             1
+9        9       0          17        18             1
+10      10       0          19        20             1
+11      -1       0           1         2             1
+12      -2       0           3         4             1
+13      -3       0           5         6             1
+14      -4       0           7         8             1
+15      -5       0           9        10             1
+16      -6       0          11        12             1
+17      -7       0          13        14             1
+18      -8       0          15        16             1
+19      -9       0          17        18             1
+20     -10       0          19        20             1
+progress check: 1 cities of 21 cities visited, the running time is 0.01551055908203125, and 1 labels have been created
+progress check: 2 cities of 21 cities visited, the running time is 0.025509357452392578, and 3 labels have been created
+progress check: 3 cities of 21 cities visited, the running time is 0.05251049995422363, and 4 labels have been created
+progress check: 4 cities of 21 cities visited, the running time is 0.06451034545898438, and 6 labels have been created
+progress check: 5 cities of 21 cities visited, the running time is 0.08951067924499512, and 7 labels have been created
+progress check: 6 cities of 21 cities visited, the running time is 0.1015167236328125, and 9 labels have been created
+progress check: 7 cities of 21 cities visited, the running time is 0.11851286888122559, and 10 labels have been created
+progress check: 8 cities of 21 cities visited, the running time is 0.12351179122924805, and 12 labels have been created
+progress check: 9 cities of 21 cities visited, the running time is 0.13451623916625977, and 13 labels have been created
+progress check: 10 cities of 21 cities visited, the running time is 0.14251255989074707, and 15 labels have been created
+progress check: 11 cities of 21 cities visited, the running time is 0.1555156707763672, and 16 labels have been created
+progress check: 12 cities of 21 cities visited, the running time is 0.16251230239868164, and 18 labels have been created
+progress check: 13 cities of 21 cities visited, the running time is 0.17151141166687012, and 19 labels have been created
+progress check: 14 cities of 21 cities visited, the running time is 0.17551231384277344, and 21 labels have been created
+progress check: 15 cities of 21 cities visited, the running time is 0.18251633644104004, and 22 labels have been created
+progress check: 16 cities of 21 cities visited, the running time is 0.18351483345031738, and 24 labels have been created
+progress check: 17 cities of 21 cities visited, the running time is 0.18651437759399414, and 25 labels have been created
+progress check: 18 cities of 21 cities visited, the running time is 0.18751859664916992, and 27 labels have been created
+progress check: 19 cities of 21 cities visited, the running time is 0.191511869430542, and 28 labels have been created
+progress check: 20 cities of 21 cities visited, the running time is 0.1935124397277832, and 30 labels have been created
+progress check: 21 cities of 21 cities visited, the running time is 0.19551396369934082, and 31 labels have been created
+time check:
+    opt path[i]  start[i]  arrival  departure[i]  end[i]
+0             0         0      0.0           0.0    2000
+1             1         1      1.0           2.0       2
+2             2         3      3.0           4.0       4
+3             3         5      5.0           6.0       6
+4             4         7      7.0           8.0       8
+5             5         9      9.0          10.0      10
+6             6        11     11.0          12.0      12
+7             7        13     13.0          14.0      14
+8             8        15     15.0          16.0      16
+9             9        17     17.0          18.0      18
+10           10        19     19.0          20.0      20
+11            0         0     30.0          30.0    2000
+    opt path[i]  start[i]  arrival  departure[i]  end[i]
+0             0         0      0.0           0.0    2000
+1            11         1      1.0           2.0       2
+2            12         3      3.0           4.0       4
+3            13         5      5.0           6.0       6
+4            14         7      7.0           8.0       8
+5            15         9      9.0          10.0      10
+6            16        11     11.0          12.0      12
+7            17        13     13.0          14.0      14
+8            18        15     15.0          16.0      16
+9            19        17     17.0          18.0      18
+10           20        19     19.0          20.0      20
+11            0         0     30.0          30.0    2000
+the memo length is 31
+Found optimal path in 0.252 seconds.
+Optimal cost: (20.0, 20.0), optimal path: [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0], [0, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 0]]
+duplicate label check rejected 12 labels.
+time window check rejected 0 labels.
+jump ahead check rejected 396 labels.
+test 2 rejected 0 labels.
+test 1 rejected 0 labels.
+dominance check rejected 0 labels.
+620 were considered
+###COMPLETE_RESULTS:, VRP_testing_1_label, T1 = True, T2 = False, 0.252, (20.0, 20.0), [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0], [0, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 0]], 31
+         210890 function calls (208385 primitive calls) in 0.281 seconds
+
+   Ordered by: cumulative time
+   List reduced from 619 to 62 due to restriction <0.1>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.283    0.283 C:\Users\akulick\PycharmProjects\pythonProject\main.py:1174(Solver)
+        1    0.024    0.024    0.252    0.252 C:\Users\akulick\PycharmProjects\pythonProject\main.py:1038(VRP_Solve)
+        3    0.000    0.000    0.067    0.022 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\frame.py:785(__repr__)
+        3    0.000    0.000    0.066    0.022 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\frame.py:859(to_string)
+        3    0.000    0.000    0.065    0.022 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1010(to_string)
+        3    0.000    0.000    0.065    0.022 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\string.py:22(to_string)
+        3    0.000    0.000    0.065    0.022 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\string.py:34(_get_string_representation)
+      426    0.026    0.000    0.057    0.000 C:\Users\akulick\PycharmProjects\pythonProject\main.py:672(strong_jump_ahead_check)
+        1    0.001    0.001    0.056    0.056 C:\Users\akulick\PycharmProjects\pythonProject\main.py:902(retrace_optimal_path_VRP)
+    22520    0.028    0.000    0.049    0.000 C:\Users\akulick\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py:2099(debug)
+        3    0.000    0.000    0.047    0.016 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\string.py:148(_fit_strcols_to_terminal_width)
+3458/1775    0.008    0.000    0.040    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+        6    0.000    0.000    0.035    0.006 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\string.py:28(_get_strcols)
+        6    0.000    0.000    0.035    0.006 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:515(get_strcols)
+        6    0.001    0.000    0.034    0.006 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:749(_get_strcols_without_index)
+     1242    0.002    0.000    0.032    0.000 <__array_function__ internals>:2(round_)
+     1242    0.002    0.000    0.027    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\fromnumeric.py:3709(round_)
+      608    0.010    0.000    0.025    0.000 C:\Users\akulick\PycharmProjects\pythonProject\main.py:649(VRP_time_window_check)
+     1242    0.002    0.000    0.025    0.000 <__array_function__ internals>:2(around)
+       30    0.000    0.000    0.025    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:796(format_col)
+        3    0.000    0.000    0.022    0.007 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\string.py:158(<listcomp>)
+     1242    0.002    0.000    0.021    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\fromnumeric.py:3199(around)
+       99    0.001    0.000    0.020    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\series.py:238(__init__)
+     1242    0.002    0.000    0.019    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\fromnumeric.py:52(_wrapfunc)
+    22520    0.011    0.000    0.018    0.000 C:\Users\akulick\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py:1424(debug)
+       30    0.000    0.000    0.018    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1142(format_array)
+       36    0.001    0.000    0.018    0.000 {built-in method builtins.print}
+     1240    0.016    0.000    0.016    0.000 {method 'round' of 'numpy.generic' objects}
+       30    0.000    0.000    0.015    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1248(get_result)
+        1    0.000    0.000    0.015    0.015 C:\Users\akulick\PycharmProjects\pythonProject\main.py:251(special_values)
+        1    0.000    0.000    0.014    0.014 C:\Users\akulick\PycharmProjects\pythonProject\main.py:154(read_in_data)
+     4988    0.007    0.000    0.013    0.000 C:\Users\akulick\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py:2089(info)
+        1    0.000    0.000    0.012    0.012 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\arrayprint.py:1500(_array_str_implementation)
+        1    0.000    0.000    0.012    0.012 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\arrayprint.py:516(array2string)
+        1    0.000    0.000    0.012    0.012 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\arrayprint.py:461(wrapper)
+        1    0.000    0.000    0.012    0.012 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\arrayprint.py:478(_array2string)
+      620    0.007    0.000    0.012    0.000 C:\Users\akulick\PycharmProjects\pythonProject\main.py:526(duplicate_label_check_VRP_update2)
+        8    0.000    0.000    0.011    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1493(_format_strings)
+        8    0.000    0.000    0.011    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1394(get_result_as_array)
+       18    0.001    0.000    0.011    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\series.py:4009(apply)
+        1    0.000    0.000    0.011    0.011 C:\Users\akulick\PycharmProjects\pythonProject\main.py:167(<listcomp>)
+       66    0.001    0.000    0.010    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\construction.py:423(sanitize_array)
+        8    0.000    0.000    0.010    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1419(format_values_with)
+      441    0.001    0.000    0.009    0.000 <__array_function__ internals>:2(norm)
+    27508    0.008    0.000    0.008    0.000 C:\Users\akulick\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py:1689(isEnabledFor)
+        1    0.000    0.000    0.008    0.008 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\arrayprint.py:736(_formatArray)
+    463/1    0.002    0.000    0.008    0.008 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\arrayprint.py:745(recurser)
+        8    0.000    0.000    0.008    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1847(_trim_zeros_float)
+      620    0.004    0.000    0.008    0.000 C:\Users\akulick\PycharmProjects\pythonProject\main.py:880(prefix_search2)
+      441    0.004    0.000    0.007    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\linalg\linalg.py:2362(norm)
+       30    0.004    0.000    0.007    0.000 C:\Users\akulick\PycharmProjects\pythonProject\main.py:733(VRP_test1A)
+       30    0.000    0.000    0.006    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\indexing.py:882(__getitem__)
+37854/37506    0.006    0.000    0.006    0.000 {built-in method builtins.len}
+        3    0.000    0.000    0.006    0.002 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\frame.py:502(__init__)
+        3    0.000    0.000    0.006    0.002 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\internals\construction.py:241(init_dict)
+       30    0.000    0.000    0.006    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\indexing.py:1448(_getitem_tuple)
+     1344    0.001    0.000    0.006    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1858(is_number_with_decimal)
+       66    0.001    0.000    0.006    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1775(_make_fixed_width)
+     9127    0.004    0.000    0.006    0.000 {built-in method builtins.isinstance}
+        6    0.000    0.000    0.005    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:821(_get_formatted_column_labels)
+     4988    0.003    0.000    0.005    0.000 C:\Users\akulick\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py:1436(info)
+       30    0.004    0.000    0.005    0.000 C:\Users\akulick\PycharmProjects\pythonProject\main.py:775(VRP_dominance_test_update4)
+
+
+
+TW = True
+DUP = True
+SJA = True
+DOM = True
+T1 = True
+T2 = True
+    xcoord  ycoord  start time  end time  service time
+0        0       0           0      2000             0
+1        1       0           1         2             1
+2        2       0           3         4             1
+3        3       0           5         6             1
+4        4       0           7         8             1
+5        5       0           9        10             1
+6        6       0          11        12             1
+7        7       0          13        14             1
+8        8       0          15        16             1
+9        9       0          17        18             1
+10      10       0          19        20             1
+11      -1       0           1         2             1
+12      -2       0           3         4             1
+13      -3       0           5         6             1
+14      -4       0           7         8             1
+15      -5       0           9        10             1
+16      -6       0          11        12             1
+17      -7       0          13        14             1
+18      -8       0          15        16             1
+19      -9       0          17        18             1
+20     -10       0          19        20             1
+progress check: 1 cities of 21 cities visited, the running time is 0.011000633239746094, and 1 labels have been created
+progress check: 2 cities of 21 cities visited, the running time is 0.02500128746032715, and 3 labels have been created
+progress check: 3 cities of 21 cities visited, the running time is 0.049001216888427734, and 4 labels have been created
+progress check: 4 cities of 21 cities visited, the running time is 0.06100177764892578, and 6 labels have been created
+progress check: 5 cities of 21 cities visited, the running time is 0.08000040054321289, and 7 labels have been created
+progress check: 6 cities of 21 cities visited, the running time is 0.09300112724304199, and 9 labels have been created
+progress check: 7 cities of 21 cities visited, the running time is 0.1080024242401123, and 10 labels have been created
+progress check: 8 cities of 21 cities visited, the running time is 0.11500096321105957, and 12 labels have been created
+progress check: 9 cities of 21 cities visited, the running time is 0.1269996166229248, and 13 labels have been created
+progress check: 10 cities of 21 cities visited, the running time is 0.1320185661315918, and 15 labels have been created
+progress check: 11 cities of 21 cities visited, the running time is 0.14100027084350586, and 16 labels have been created
+progress check: 12 cities of 21 cities visited, the running time is 0.14500141143798828, and 18 labels have been created
+progress check: 13 cities of 21 cities visited, the running time is 0.15202093124389648, and 19 labels have been created
+progress check: 14 cities of 21 cities visited, the running time is 0.15600156784057617, and 21 labels have been created
+progress check: 15 cities of 21 cities visited, the running time is 0.16100120544433594, and 22 labels have been created
+progress check: 16 cities of 21 cities visited, the running time is 0.16500091552734375, and 24 labels have been created
+progress check: 17 cities of 21 cities visited, the running time is 0.16901826858520508, and 25 labels have been created
+progress check: 18 cities of 21 cities visited, the running time is 0.17100286483764648, and 27 labels have been created
+progress check: 19 cities of 21 cities visited, the running time is 0.1730036735534668, and 28 labels have been created
+progress check: 20 cities of 21 cities visited, the running time is 0.17600393295288086, and 30 labels have been created
+progress check: 21 cities of 21 cities visited, the running time is 0.17800188064575195, and 31 labels have been created
+time check:
+    opt path[i]  start[i]  arrival  departure[i]  end[i]
+0             0         0      0.0           0.0    2000
+1             1         1      1.0           2.0       2
+2             2         3      3.0           4.0       4
+3             3         5      5.0           6.0       6
+4             4         7      7.0           8.0       8
+5             5         9      9.0          10.0      10
+6             6        11     11.0          12.0      12
+7             7        13     13.0          14.0      14
+8             8        15     15.0          16.0      16
+9             9        17     17.0          18.0      18
+10           10        19     19.0          20.0      20
+11            0         0     30.0          30.0    2000
+    opt path[i]  start[i]  arrival  departure[i]  end[i]
+0             0         0      0.0           0.0    2000
+1            11         1      1.0           2.0       2
+2            12         3      3.0           4.0       4
+3            13         5      5.0           6.0       6
+4            14         7      7.0           8.0       8
+5            15         9      9.0          10.0      10
+6            16        11     11.0          12.0      12
+7            17        13     13.0          14.0      14
+8            18        15     15.0          16.0      16
+9            19        17     17.0          18.0      18
+10           20        19     19.0          20.0      20
+11            0         0     30.0          30.0    2000
+the memo length is 31
+Found optimal path in 0.225 seconds.
+Optimal cost: (20.0, 20.0), optimal path: [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0], [0, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 0]]
+duplicate label check rejected 12 labels.
+time window check rejected 0 labels.
+jump ahead check rejected 396 labels.
+test 2 rejected 0 labels.
+test 1 rejected 0 labels.
+dominance check rejected 0 labels.
+620 were considered
+###COMPLETE_RESULTS:, VRP_testing_1_label, T1 = True, T2 = True, 0.225, (20.0, 20.0), [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0], [0, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 0]], 31
+         211652 function calls (209147 primitive calls) in 0.250 seconds
+
+   Ordered by: cumulative time
+   List reduced from 624 to 62 due to restriction <0.1>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.251    0.251 C:\Users\akulick\PycharmProjects\pythonProject\main.py:1174(Solver)
+        1    0.023    0.023    0.225    0.225 C:\Users\akulick\PycharmProjects\pythonProject\main.py:1038(VRP_Solve)
+        3    0.000    0.000    0.054    0.018 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\frame.py:785(__repr__)
+        3    0.000    0.000    0.054    0.018 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\frame.py:859(to_string)
+        3    0.000    0.000    0.053    0.018 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1010(to_string)
+        3    0.000    0.000    0.053    0.018 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\string.py:22(to_string)
+        3    0.000    0.000    0.053    0.018 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\string.py:34(_get_string_representation)
+      426    0.024    0.000    0.051    0.000 C:\Users\akulick\PycharmProjects\pythonProject\main.py:672(strong_jump_ahead_check)
+        1    0.001    0.001    0.046    0.046 C:\Users\akulick\PycharmProjects\pythonProject\main.py:902(retrace_optimal_path_VRP)
+    22580    0.026    0.000    0.045    0.000 C:\Users\akulick\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py:2099(debug)
+        3    0.000    0.000    0.037    0.012 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\string.py:148(_fit_strcols_to_terminal_width)
+3458/1775    0.007    0.000    0.035    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+     1242    0.002    0.000    0.030    0.000 <__array_function__ internals>:2(round_)
+        6    0.000    0.000    0.030    0.005 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\string.py:28(_get_strcols)
+        6    0.000    0.000    0.030    0.005 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:515(get_strcols)
+        6    0.000    0.000    0.028    0.005 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:749(_get_strcols_without_index)
+     1242    0.001    0.000    0.025    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\fromnumeric.py:3709(round_)
+      608    0.010    0.000    0.024    0.000 C:\Users\akulick\PycharmProjects\pythonProject\main.py:649(VRP_time_window_check)
+     1242    0.002    0.000    0.024    0.000 <__array_function__ internals>:2(around)
+       30    0.000    0.000    0.021    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:796(format_col)
+     1242    0.002    0.000    0.019    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\fromnumeric.py:3199(around)
+     1242    0.002    0.000    0.018    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\fromnumeric.py:52(_wrapfunc)
+        3    0.000    0.000    0.017    0.006 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\string.py:158(<listcomp>)
+    22580    0.010    0.000    0.016    0.000 C:\Users\akulick\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py:1424(debug)
+       36    0.001    0.000    0.015    0.000 {built-in method builtins.print}
+     1240    0.015    0.000    0.015    0.000 {method 'round' of 'numpy.generic' objects}
+       99    0.001    0.000    0.015    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\series.py:238(__init__)
+       30    0.000    0.000    0.015    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1142(format_array)
+       30    0.000    0.000    0.012    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1248(get_result)
+     4988    0.007    0.000    0.012    0.000 C:\Users\akulick\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py:2089(info)
+        1    0.000    0.000    0.011    0.011 C:\Users\akulick\PycharmProjects\pythonProject\main.py:154(read_in_data)
+        1    0.000    0.000    0.011    0.011 C:\Users\akulick\PycharmProjects\pythonProject\main.py:251(special_values)
+      620    0.006    0.000    0.010    0.000 C:\Users\akulick\PycharmProjects\pythonProject\main.py:526(duplicate_label_check_VRP_update2)
+        8    0.000    0.000    0.009    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1493(_format_strings)
+        8    0.000    0.000    0.009    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1394(get_result_as_array)
+        1    0.000    0.000    0.009    0.009 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\arrayprint.py:1500(_array_str_implementation)
+        1    0.000    0.000    0.009    0.009 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\arrayprint.py:516(array2string)
+        1    0.000    0.000    0.009    0.009 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\arrayprint.py:461(wrapper)
+        1    0.000    0.000    0.009    0.009 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\arrayprint.py:478(_array2string)
+       66    0.001    0.000    0.009    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\construction.py:423(sanitize_array)
+       18    0.000    0.000    0.008    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\series.py:4009(apply)
+        1    0.000    0.000    0.008    0.008 C:\Users\akulick\PycharmProjects\pythonProject\main.py:167(<listcomp>)
+        8    0.000    0.000    0.008    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1419(format_values_with)
+    27568    0.008    0.000    0.008    0.000 C:\Users\akulick\AppData\Local\Programs\Python\Python39\lib\logging\__init__.py:1689(isEnabledFor)
+      620    0.004    0.000    0.007    0.000 C:\Users\akulick\PycharmProjects\pythonProject\main.py:880(prefix_search2)
+      441    0.000    0.000    0.007    0.000 <__array_function__ internals>:2(norm)
+       30    0.004    0.000    0.006    0.000 C:\Users\akulick\PycharmProjects\pythonProject\main.py:733(VRP_test1A)
+        8    0.000    0.000    0.006    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1847(_trim_zeros_float)
+        3    0.000    0.000    0.006    0.002 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\frame.py:502(__init__)
+        3    0.000    0.000    0.006    0.002 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\internals\construction.py:241(init_dict)
+        1    0.000    0.000    0.006    0.006 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\arrayprint.py:736(_formatArray)
+    463/1    0.002    0.000    0.006    0.006 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\core\arrayprint.py:745(recurser)
+      441    0.003    0.000    0.006    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\numpy\linalg\linalg.py:2362(norm)
+37914/37566    0.005    0.000    0.005    0.000 {built-in method builtins.len}
+       30    0.000    0.000    0.005    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\indexing.py:882(__getitem__)
+       30    0.004    0.000    0.005    0.000 C:\Users\akulick\PycharmProjects\pythonProject\main.py:775(VRP_dominance_test_update4)
+     9127    0.003    0.000    0.005    0.000 {built-in method builtins.isinstance}
+       30    0.000    0.000    0.005    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\indexing.py:1448(_getitem_tuple)
+        6    0.000    0.000    0.005    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:821(_get_formatted_column_labels)
+       66    0.000    0.000    0.005    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1775(_make_fixed_width)
+     1344    0.001    0.000    0.005    0.000 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\io\formats\format.py:1858(is_number_with_decimal)
+        3    0.000    0.000    0.004    0.001 C:\Users\akulick\PycharmProjects\pythonProject\venv\lib\site-packages\pandas\core\internals\construction.py:62(arrays_to_mgr)
+
+
+
