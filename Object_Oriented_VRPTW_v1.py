@@ -1232,11 +1232,7 @@ class VRP_Problem:
 #logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 a = VRP_Problem(number_of_vehicles=3)
 
-a.Solver(read_in_data=True, data='VRP_testing_10_jobs_1', random_data=False, instances=7, timeframe=2000,
-                     locationframe=100, servicetime=True, serviceframe=25, travel_times_multiplier=1,
-                     save_name='VRP_testing_10_jobs_1', DUP=True, TW=True, T1=False, T2=True, T3=False, SJA=False, DOM=True)
 
-input()
 names = ['VRP_testing_05_jobs_1', 'VRP_testing_05_jobs_2', 'VRP_testing_05_jobs_3', 'VRP_testing_05_jobs_4',
          'VRP_testing_05_jobs_5', 'VRP_testing_10_jobs_1', 'VRP_testing_10_jobs_2', 'VRP_testing_10_jobs_3',
          'VRP_testing_10_jobs_4', 'VRP_testing_10_jobs_5', 'VRP_testing_15_jobs_1', 'VRP_testing_15_jobs_2',
