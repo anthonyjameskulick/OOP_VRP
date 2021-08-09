@@ -962,10 +962,12 @@ class VRP_Problem:
                     current_time_vector = [[] for i in range(self.number_of_vehicles)]
 
                     for i in range(self.number_of_vehicles):
-                        current_time_vector[i] = max(path_key[2][i], self.start_times[last_point[i]]) + self.service_times[
-                            last_point[i]] + self.travel_times_array[last_point[i]][0]
+                        current_time_vector[i] = max(path_key[2][i], self.start_times[last_point[i]]) + \
+                                                 self.service_times[
+                                                     last_point[i]] + self.travel_times_array[last_point[i]][0]
                         logging.info(
                             f"current time vector[{i} = {max(path_key[2][i], self.start_times[last_point[i]])} +{self.service_times[last_point[i]]}+ {self.travel_times_array[last_point[i]][0]} = {current_time_vector[i]}")
+                    current_time_vector = [x for _, x in sorted(zip(self.vehicle_order, current_time_vector))]
                     optimal_path_arrival_times = [[current_time_vector[i]] for i in vehicle_order]
                     logging.info(f"optimal path arrival times = {optimal_path_arrival_times}")
 
@@ -1232,7 +1234,10 @@ class VRP_Problem:
 #logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 a = VRP_Problem(number_of_vehicles=3)
 
-
+a.Solver(read_in_data=True, data='VRP_testing_05_jobs_2', random_data=False, instances=7, timeframe=2000,
+                     locationframe=100, servicetime=True, serviceframe=25, travel_times_multiplier=1,
+                     save_name='VRP_testing_05_jobs_2', DUP=True, TW=True, T1=True, T2=True, T3=False, SJA=True, DOM=True)
+input()
 names = ['VRP_testing_05_jobs_1', 'VRP_testing_05_jobs_2', 'VRP_testing_05_jobs_3', 'VRP_testing_05_jobs_4',
          'VRP_testing_05_jobs_5', 'VRP_testing_10_jobs_1', 'VRP_testing_10_jobs_2', 'VRP_testing_10_jobs_3',
          'VRP_testing_10_jobs_4', 'VRP_testing_10_jobs_5', 'VRP_testing_15_jobs_1', 'VRP_testing_15_jobs_2',
