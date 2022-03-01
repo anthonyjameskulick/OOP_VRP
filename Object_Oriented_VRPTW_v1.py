@@ -1,6 +1,7 @@
 import csv
 import time
 import numpy as np
+import sys
 
 np.random.seed(42)
 import random
@@ -190,8 +191,8 @@ class VRP_Problem:
             start = random.choices(time0, weights=None, k=instances)
             for i in name: self.start_times.append(start[i])
             end = []
-            for i in name: end.append(random.randrange(start[i]+25,timeframe+25))
-            #for i in name: end.append(random.randrange(start[i] + 25, start[i] + 25))
+            for i in name: end.append(random.randrange(start[i] + 25, timeframe + 25))
+            # for i in name: end.append(random.randrange(start[i] + 25, start[i] + 25))
             for i in name: self.end_times.append(end[i])
             if servicetime == True:
                 service_time = random.choices(range(0, serviceframe), weights=None, k=instances)
@@ -220,8 +221,8 @@ class VRP_Problem:
             time0 = range(0, timeframe)
             start = random.choices(time0, weights=None, k=instances - 1)
             end = []
-            #for i in range(len(start)): end.append(random.randrange(start[i] + 25, timeframe + 25))
-            for i in range(len(start)): end.append(random.randrange(start[i] + 25, start[i]+225))
+            # for i in range(len(start)): end.append(random.randrange(start[i] + 25, timeframe + 25))
+            for i in range(len(start)): end.append(random.randrange(start[i] + 25, start[i] + 225))
             start = [0] + start
             end = [timeframe] + end
             for i in name: self.start_times.append(start[i])
@@ -381,7 +382,7 @@ class VRP_Problem:
                 0]):  # time and cost improvement, replace label
                 del self.memo[(self.new_visited, self.new_last_point, self.first)]
                 self.memo[(self.new_visited, self.new_last_point, self.new_time)] = (
-                self.new_dist, self.prev_last_point, self.prev_time)
+                    self.new_dist, self.prev_last_point, self.prev_time)
                 # self.queue.remove((self.new_visited, self.new_last_point, self.first))
                 self.queue.put((self.new_visited, self.new_last_point, self.new_time))
                 logging.info(
@@ -390,7 +391,7 @@ class VRP_Problem:
                     self.new_dist < self.memo[(self.new_visited, self.new_last_point, self.first)][
                 0]):  # same time, cost improvement, replace old label with new
                 self.memo[(self.new_visited, self.new_last_point, self.first)] = (
-                self.new_dist, self.prev_last_point, self.prev_time)
+                    self.new_dist, self.prev_last_point, self.prev_time)
                 self.queue.put((self.new_visited, self.new_last_point, self.new_time))
                 logging.info(
                     f"label ({self.new_visited}, {self.new_last_point}, {self.new_time}) dominated, case 2, same time, better distance, updates old label with new distance")
@@ -398,7 +399,7 @@ class VRP_Problem:
                     self.new_dist >= self.memo[(self.new_visited, self.new_last_point, self.first)][
                 0]):  # time improvement only, add new label
                 self.memo[(self.new_visited, self.new_last_point, self.new_time)] = (
-                self.new_dist, self.prev_last_point, self.prev_time)
+                    self.new_dist, self.prev_last_point, self.prev_time)
                 self.queue.put((self.new_visited, self.new_last_point, self.new_time))
                 logging.info(
                     f"label ({self.new_visited}, {self.new_last_point}, {self.new_time}) dominated, case 3, better time, worse cost, adds label")
@@ -406,7 +407,7 @@ class VRP_Problem:
                     self.new_dist < self.memo[(self.new_visited, self.new_last_point, self.first)][
                 0]):  # cost improvement only, add new label
                 self.memo[(self.new_visited, self.new_last_point, self.new_time)] = (
-                self.new_dist, self.prev_last_point, self.prev_time)
+                    self.new_dist, self.prev_last_point, self.prev_time)
                 self.queue.put((self.new_visited, self.new_last_point, self.new_time))
                 logging.info(
                     f"label ({self.new_visited}, {self.new_last_point}, {self.new_time}) dominated, case 4, slower time, better cost, adds label")
@@ -417,7 +418,7 @@ class VRP_Problem:
                 # queue += [(new_visited, new_last_point, new_time)]
         else:  # len({k: v for k, v in memo.items() if k[0]==new_visited and k[1]==new_last_point}) == 0: #new label
             self.memo[(self.new_visited, self.new_last_point, self.new_time)] = (
-            self.new_dist, self.prev_last_point, self.prev_time)
+                self.new_dist, self.prev_last_point, self.prev_time)
             self.queue.put((self.new_visited, self.new_last_point, self.new_time))
             logging.info(f"no (S,i) label exists, {self.new_visited, self.new_last_point, self.new_time} added")
         logging.debug(f"the queue is {self.queue}")
@@ -530,7 +531,8 @@ class VRP_Problem:
         logging.info(f"starting duplicate label check")
         # first check to see if the current label is stored in the memo or rejected labels dictionaries with a cost equal to the current cost.
         if ((
-            tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version) in self.memo) or (
+                    tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt),
+                    self.key_version) in self.memo) or (
                 (self.new_visited, self.sorted_nlp, self.sorted_nt, self.key_version) in self.rejected_labels):
             if (tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version) in self.memo:
                 costcheck, _, _, _, _ = self.memo[
@@ -790,7 +792,7 @@ class VRP_Problem:
             logging.info(
                 f"no (S,V_i) label exists, {self.new_visited, self.sorted_nlp, self.sorted_nt, self.key_version} added")
             self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)] = (
-            self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo, self.prev_key_version)
+                self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo, self.prev_key_version)
             self.queue.put((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version))
             self.prefix_memo[(tuple(self.new_visited), tuple(self.sorted_nlp))] = [
                 (tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)]
@@ -858,13 +860,14 @@ class VRP_Problem:
             # as long as the current label is not dominated it needs to be added, but this must be done carefull so as not to replace a non-dominated existing label
             if not dom_check_1:
                 while (
-                tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version) in dom_lab:
+                        tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt),
+                        self.key_version) in dom_lab:
                     self.key_version = self.key_version + 1
                     logging.debug(f"key_version = {self.key_version}")
 
                 self.memo[
                     (tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version)] = (
-                self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo, self.prev_key_version)
+                    self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo, self.prev_key_version)
                 self.queue.put(
                     (tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt), self.key_version))
                 if (tuple(self.new_visited), tuple(self.sorted_nlp)) in self.prefix_memo:
@@ -929,8 +932,9 @@ class VRP_Problem:
                         logging.debug(f"current location for vehicle {j} = {x[1][j]}")
                         current_cost_vector[j] = full_path_memo.get(x)[0][j] + self.distances_array[x[1][j]][0]
                         logging.debug(f"updated distances = {current_cost_vector}")
-                        full_path_memo[x] = (tuple(current_cost_vector), full_path_memo.get(x)[1], full_path_memo.get(x)[2],
-                                             full_path_memo.get(x)[3], full_path_memo.get(x)[4])
+                        full_path_memo[x] = (
+                        tuple(current_cost_vector), full_path_memo.get(x)[1], full_path_memo.get(x)[2],
+                        full_path_memo.get(x)[3], full_path_memo.get(x)[4])
                         logging.debug(f"full path memo[{x}] = {full_path_memo[x]}")
                 logging.debug(f"updated cost full path memo = {full_path_memo}")
 
@@ -994,8 +998,9 @@ class VRP_Problem:
                                 logging.info(f"point to remove = {point_to_remove}")
                                 optimal_path[vehicle_order[i]] = [point_to_remove] + optimal_path[vehicle_order[i]]
                                 logging.info(f"optimal path = {optimal_path}")
-                                optimal_path_arrival_times[vehicle_order[i]] = [last_time[i]] + optimal_path_arrival_times[
-                                    vehicle_order[i]]
+                                optimal_path_arrival_times[vehicle_order[i]] = [last_time[i]] + \
+                                                                               optimal_path_arrival_times[
+                                                                                   vehicle_order[i]]
                                 logging.info(f"optimal path arrival times = {optimal_path_arrival_times}")
                                 res1 = [i for i in points_to_retrace if i not in [point_to_remove]]
                                 points_to_retrace = tuple(sorted(res1))
@@ -1035,7 +1040,8 @@ class VRP_Problem:
                     for j in range(len(optimal_path[i])):
                         logging.info(f"for job {optimal_path[i]}")
                         optimal_path_departure_times[i] = optimal_path_departure_times[i] + [
-                            max(optimal_path_arrival_times[i][j] + self.service_times[optimal_path[i][j]], start1[i][j])]
+                            max(optimal_path_arrival_times[i][j] + self.service_times[optimal_path[i][j]],
+                                start1[i][j])]
                         logging.info(f"opt path depart = {optimal_path_departure_times}")
                 logging.info(f"optimal path departure times = {optimal_path_departure_times}")
 
@@ -1044,7 +1050,8 @@ class VRP_Problem:
                 print("time check:")
                 for i in range(self.number_of_vehicles):
                     self.df1 = pd.DataFrame(
-                        {'opt path[i]': optimal_path[i], 'start[i]': start1[i], 'arrival': optimal_path_arrival_times[i],
+                        {'opt path[i]': optimal_path[i], 'start[i]': start1[i],
+                         'arrival': optimal_path_arrival_times[i],
                          'departure[i]': optimal_path_departure_times[i], 'end[i]': end1[i]})
                     print(f"{self.df1}")
         return self.optimal_path, self.optimal_cost
@@ -1064,7 +1071,8 @@ class VRP_Problem:
                 break
 
             self.prev_visited, self.prev_last_point, self.prev_time, self.prev_key_version = self.queue.get()
-            logging.debug(f"preV = {self.prev_visited}, prevLP = {self.prev_last_point}, prevT = {self.prev_time}, prevKV = {self.prev_key_version}")
+            logging.debug(
+                f"preV = {self.prev_visited}, prevLP = {self.prev_last_point}, prevT = {self.prev_time}, prevKV = {self.prev_key_version}")
             while self.memo.get((tuple(self.prev_visited), tuple(self.prev_last_point), tuple(self.prev_time),
                                  self.prev_key_version)) == None:
                 self.prev_visited, self.prev_last_point, self.prev_time, self.prev_key_version = self.queue.get()
@@ -1096,7 +1104,7 @@ class VRP_Problem:
                         self.new_time[j] = self.prev_time[j]
                         logging.debug(f"nt[{j}] = {self.new_time[j]}")
                 for self.new_last_point[i] in to_visit:
-                    #self.labels_considered = self.labels_considered + 1
+                    # self.labels_considered = self.labels_considered + 1
                     logging.info(f"visiting job {self.new_last_point[i]}")
                     self.new_visited = tuple(sorted(list(self.prev_visited) + [self.new_last_point[i]]))
                     logging.debug(f"prev dist = {self.prev_dist[i]}")
@@ -1161,7 +1169,8 @@ class VRP_Problem:
 
                             self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt),
                                        self.key_version)] = (
-                            self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo, self.prev_key_version)
+                                self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo,
+                                self.prev_key_version)
                             self.queue.put((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt),
                                             self.key_version))
                             temp = self.prefix_memo[(tuple(self.new_visited), tuple(self.sorted_nlp))]
@@ -1171,7 +1180,8 @@ class VRP_Problem:
                         else:
                             self.memo[(tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt),
                                        self.key_version)] = (
-                            self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo, self.prev_key_version)
+                                self.sorted_nd, self.prev_last_point, self.prev_time, self.sorted_vo,
+                                self.prev_key_version)
                             self.queue.put((tuple(self.new_visited), tuple(self.sorted_nlp), tuple(self.sorted_nt),
                                             self.key_version))
                             if (tuple(self.new_visited), tuple(self.sorted_nlp)) in self.prefix_memo:
@@ -1193,9 +1203,11 @@ class VRP_Problem:
     def Solver(self, read_in_data, data, random_data, instances, timeframe, locationframe, servicetime, serviceframe,
                travel_times_multiplier, save_name, DUP, TW, T1, T2, T3, SJA, DOM):
         self.reset_problem()
+
         if read_in_data == True:
             self.read_in_data(data, travel_times_multiplier)
             print(self.df)
+
         else:
             logging.debug('no read in data given')
         if random_data == True:
@@ -1214,6 +1226,7 @@ class VRP_Problem:
             self.t = time.time()
             self.VRP_Solve(DUP, TW, SJA, DOM, T1, T2)
             self.run_time = round(time.time() - self.t, 3)
+            self.optimal_path, self.optimal_cost, self.df1
         if self.stopper == False:
             print(f"the memo length is {len(self.memo)}")
             if self.number_of_vehicles == 1:
@@ -1231,99 +1244,37 @@ class VRP_Problem:
         return
 
 
-#logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
-a = VRP_Problem(number_of_vehicles=3)
+# logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
+a = VRP_Problem(number_of_vehicles=2)
 
-a.Solver(read_in_data=True, data='VRP_testing_05_jobs_2', random_data=False, instances=7, timeframe=2000,
-                     locationframe=100, servicetime=True, serviceframe=25, travel_times_multiplier=1,
-                     save_name='VRP_testing_05_jobs_2', DUP=True, TW=True, T1=True, T2=True, T3=False, SJA=True, DOM=True)
-input()
-names = ['VRP_testing_05_jobs_1', 'VRP_testing_05_jobs_2', 'VRP_testing_05_jobs_3', 'VRP_testing_05_jobs_4',
-         'VRP_testing_05_jobs_5', 'VRP_testing_10_jobs_1', 'VRP_testing_10_jobs_2', 'VRP_testing_10_jobs_3',
-         'VRP_testing_10_jobs_4', 'VRP_testing_10_jobs_5', 'VRP_testing_15_jobs_1', 'VRP_testing_15_jobs_2',
-         'VRP_testing_15_jobs_3', 'VRP_testing_15_jobs_4', 'VRP_testing_15_jobs_5', 'VRP_testing_20_jobs_1',
-         'VRP_testing_20_jobs_2', 'VRP_testing_20_jobs_3', 'VRP_testing_20_jobs_4', 'VRP_testing_20_jobs_5',
-         'VRP_testing_25_jobs_1', 'VRP_testing_25_jobs_2', 'VRP_testing_25_jobs_3', 'VRP_testing_25_jobs_4',
-         'VRP_testing_25_jobs_5']
-names05 = ['VRP_testing_05_jobs_1', 'VRP_testing_05_jobs_2', 'VRP_testing_05_jobs_3', 'VRP_testing_05_jobs_4',
-           'VRP_testing_05_jobs_5']
-names10 = ['VRP_testing_10_jobs_1', 'VRP_testing_10_jobs_2', 'VRP_testing_10_jobs_3', 'VRP_testing_10_jobs_4',
-           'VRP_testing_10_jobs_5']
-names15 = ['VRP_testing_15_jobs_1', 'VRP_testing_15_jobs_2', 'VRP_testing_15_jobs_3', 'VRP_testing_15_jobs_4',
-           'VRP_testing_15_jobs_5']
-names20 = ['VRP_testing_20_jobs_1', 'VRP_testing_20_jobs_2', 'VRP_testing_20_jobs_3', 'VRP_testing_20_jobs_4',
-           'VRP_testing_20_jobs_5']
-names25 = ['VRP_testing_25_jobs_1', 'VRP_testing_25_jobs_2', 'VRP_testing_25_jobs_3', 'VRP_testing_25_jobs_4',
-           'VRP_testing_25_jobs_5']
-big_names = ['VRP_testing_15_jobs_1', 'VRP_testing_15_jobs_2', 'VRP_testing_15_jobs_3', 'VRP_testing_15_jobs_4',
-             'VRP_testing_15_jobs_5', 'VRP_testing_20_jobs_1', 'VRP_testing_20_jobs_2', 'VRP_testing_20_jobs_3',
-             'VRP_testing_20_jobs_4', 'VRP_testing_20_jobs_5', 'VRP_testing_25_jobs_1', 'VRP_testing_25_jobs_2',
-             'VRP_testing_25_jobs_3', 'VRP_testing_25_jobs_4', 'VRP_testing_25_jobs_5']
+original_stdout = sys.stdout  # Save a reference to the original standard output
+
+names = ['randata_05_v1', 'randata_05_v2', 'randata_05_v3', 'randata_05_v4', 'randata_05_v5',
+         'randata_10_v1', 'randata_10_v2', 'randata_10_v3', 'randata_10_v4', 'randata_10_v5',
+         'randata_15_v1', 'randata_15_v2', 'randata_15_v3', 'randata_15_v4', 'randata_15_v5',
+         'randata_20_v1', 'randata_20_v2', 'randata_20_v3', 'randata_20_v4', 'randata_20_v5',
+         'randata_25_v1', 'randata_25_v2', 'randata_25_v3', 'randata_25_v4', 'randata_25_v5',
+         'randata_30_v1', 'randata_30_v2', 'randata_30_v3', 'randata_30_v4', 'randata_30_v5']
+
+dup = [False, True, True, True, True, True, False]
+t1 = [False, True, True, True, True, False, True]
+t2 = [False, True, True, True, False, True, True]
+sja = [False, True, True, False, True, True, True]
+dom = [False, True, False, True, True, True, True]
 
 
+with open('log_file.txt', 'a') as f:
+    sys.stdout = f  # Change the standard output to the file we created.
+    for i in range(len(names)):
 
-t1 = [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False,
-      True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True]
-t2 = [False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, False,
-      False, False, False, False, False, False, False, True, True, True, True, True, True, True, True]
-dom = [False, False, False, False, True, True, True, True, False, False, False, False, True, True, True, True, False,
-       False, False, False, True, True, True, True, False, False, False, False, True, True, True, True]
-dup = [False, False, True, True, False, False, True, True, False, False, True, True, False, False, True, True, False,
-       False, True, True, False, False, True, True, False, False, True, True, False, False, True, True]
-sja = [False, True, False, True, False, True, False, True, False, True, False, True, False, True, False, True, False,
-       True, False, True, False, True, False, True, False, True, False, True, False, True, False, True]
-
-
-for i in range(len(names)):
-    for j in range(len(dom)):
-        print(f"data set = {names[i]}")
-        print(f"TW = True")
-        print(f"DUP = {dup[j]}")
-        print(f"SJA = {sja[j]}")
-        print(f"T1 = {t1[j]}")
-        print(f"T2 = {t2[j]}")
-        print(f"DOM = {dom[j]}")
-        if dup[j] == False and sja[j] == False and t1[j] == False and t2[j] == False and dom[j] == False:
-            print("this instance is skipped")
-        elif dup[j] == False and sja[j] == False and t1[j] == False and t2[j] == True and dom[j] == False:
-            print("this instance is skipped")
-        elif dup[j] == False and sja[j] == False and t1[j] == True and t2[j] == False and dom[j] == False:
-            print("this instance is skipped")
-        elif dup[j] == False and sja[j] == False and t1[j] == True and t2[j] == True and dom[j] == False:
-            print("this instance is skipped")
-        else:
+        for j in range(len(dom)):
+            print(names[i])
+            print(f"dup = {dup[j]}, t1 = {t1[j]}, t2 = {t2[j]}, sja = {sja[j]}, dom = {dom[j]} \n")
             a.Solver(read_in_data=True, data=names[i], random_data=False, instances=7, timeframe=2000,
-                     locationframe=100, servicetime=True, serviceframe=25, travel_times_multiplier=1,
-                     save_name=names[i], DUP=dup[j], TW=True, T1=t1[j], T2=t2[j], T3=False, SJA=sja[j], DOM=dom[j])
-            print(
-                f"###COMPLETE_RESULTS:, {names[i]}, {dup[j]}, {sja[j]}, {t1[j]}, {t2[j]}, {dom[j]}, {a.run_time}, {a.optimal_cost}, {a.optimal_path}, {len(a.memo)}")
+                 locationframe=100, servicetime=True, serviceframe=25, travel_times_multiplier=1,
+                 save_name='VRP_testing_05_jobs_2', DUP=dup[j], TW=True, T1=t1[j], T2=t2[j], T3=False, SJA=sja[j], DOM=dom[j])
+            print(f"###COMPLETE_RESULTS:, {names[i]}, {dup[j]}, {t1[j]}, {t2[j]}, {sja[j]},  {dom[j]}, {a.run_time}, {a.optimal_cost}, {a.optimal_path}, {len(a.memo)} \n\n")
+    sys.stdout = original_stdout  # Reset the standard output to its original value
 
 
-#tight_windows = ['tight_windows15_1.csv', 'tight_windows15_2.csv', 'tight_windows15_3.csv', 'tight_windows15_4.csv', 'tight_windows15_5.csv', 'tight_windows20_1.csv', 'tight_windows20_2.csv', 'tight_windows20_3.csv', 'tight_windows20_4.csv', 'tight_windows20_5.csv']
-#size = [25, 25, 25, 25, 25, 30, 30, 30, 30, 30, 35, 35, 35, 35, 35, 40, 40, 40, 40, 40, 45, 45, 45, 45, 45, 50, 50, 50, 50, 50]
-#tight_windows2 = ['tight_windows25_2.csv', 'tight_windows25_3.csv', 'tight_windows30_1.csv', 'tight_windows30_2.csv', 'tight_windows30_3.csv', 'tight_windows30_4.csv', 'tight_windows35_1.csv', 'tight_windows35_3.csv', 'tight_windows35_4.csv', 'tight_windows35_5.csv', 'tight_windows40_1.csv', 'tight_windows40_2.csv', 'tight_windows40_3.csv', 'tight_windows40_4.csv', 'tight_windows40_5.csv', 'tight_windows45_1.csv', 'tight_windows45_2.csv', 'tight_windows45_3.csv', 'tight_windows45_4.csv', 'tight_windows45_5.csv','tight_windows50_1.csv', 'tight_windows50_2.csv', 'tight_windows50_3.csv', 'tight_windows50_4.csv', 'tight_windows50_5.csv']
-#tight_windows3 = ['tight_windows25_11.csv', 'tight_windows25_12.csv', 'tight_windows25_13.csv', 'tight_windows25_14.csv', 'tight_windows25_15.csv', 'tight_windows30_11.csv', 'tight_windows30_12.csv', 'tight_windows30_13.csv', 'tight_windows30_14.csv', 'tight_windows30_15.csv', 'tight_windows35_11.csv', 'tight_windows35_12.csv', 'tight_windows35_13.csv', 'tight_windows35_14.csv', 'tight_windows35_15.csv', 'tight_windows40_11.csv', 'tight_windows40_12.csv', 'tight_windows40_13.csv', 'tight_windows40_14.csv', 'tight_windows40_15.csv', 'tight_windows45_11.csv', 'tight_windows45_12.csv', 'tight_windows45_13.csv', 'tight_windows45_14.csv', 'tight_windows45_15.csv','tight_windows50_11.csv', 'tight_windows50_12.csv', 'tight_windows50_13.csv', 'tight_windows50_14.csv', 'tight_windows50_15.csv']
-#t1 = [False, False, True, True]
-#t2 = [False, True, False, True]
-#for k in range(len(tight_windows2)):
-        #for j in {0, 1, 2, 3}:
-            #print(f"data set = {tight_windows3[k]}")
-            #print(f"TW = True")
-            #print(f"DUP = True")
-            #print(f"SJA = True")
-            #print(f"DOM = True")
-            #print(f"T1 = {t1[3]}")
-            #print(f"T2 = {t2[3]}")
-            #pr = cProfile.Profile()
-            #pr.enable()
-            #a.Solver(read_in_data=False, data=tight_windows3[k], random_data=True, instances=size[k], timeframe=2000, locationframe=100,
-                     #servicetime=True, serviceframe=25, travel_times_multiplier=1, save_name=tight_windows3[k], DUP=True,
-                     #TW=True, T1=t1[3], T2=t2[3], T3=False, SJA=True, DOM=True)
-            #print(
-                #f"###COMPLETE_RESULTS:, {tight_windows3[k]}, T1 = {t1[3]}, T2 = {t2[3]}, {a.run_time}, {a.optimal_cost}, {a.optimal_path}, {len(a.memo)}")
-            #pr.disable()
-            #s = io.StringIO()
-            #sortby = SortKey.CUMULATIVE
-            #ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-            #ps.print_stats(.1)
-            #print(s.getvalue())
+#check
