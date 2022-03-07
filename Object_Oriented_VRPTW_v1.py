@@ -325,7 +325,7 @@ class VRP_Problem:
         return
 
     def dumas_test1(self):
-        check = [i for i in all_points_set if i not in self.new_visited]
+        check = [i for i in self.all_points_set if i not in self.new_visited]
         if len(check) == 0:
             test1 = True
         elif self.first > min(self.LDT_array[j][self.new_last_point] for j in check):
@@ -338,7 +338,7 @@ class VRP_Problem:
 
     def dumas_test3(self):
         logging.debug(f"adding to restricted labels")
-        check1 = [i for i in all_points_set if i not in self.new_visited]
+        check1 = [i for i in self.all_points_set if i not in self.new_visited]
         for x in check1:
             new_visited1 = sorted(self.new_visited)
             new_last_point1 = self.new_last_point
@@ -348,7 +348,7 @@ class VRP_Problem:
                 new_last_point1 = x
                 new_time1 = self.new_time + self.service_times[self.new_last_point] + \
                             self.travel_times_array[self.new_last_point][x]
-                check2 = [i for i in all_points_set if i not in new_visited1]
+                check2 = [i for i in self.all_points_set if i not in new_visited1]
                 new_visited1 = tuple(sorted(new_visited1))
                 for y in check2:
                     new_visited2 = list(sorted(new_visited1))
@@ -478,7 +478,7 @@ class VRP_Problem:
                 self.prev_visited, self.prev_last_point, self.prev_time = self.queue.get()
             self.prev_dist, _, _ = self.memo[(self.prev_visited, self.prev_last_point, self.prev_time)]
             logging.info(f"extending from ({self.prev_visited}, {self.prev_last_point}, {self.prev_time})")
-            to_visit = [i for i in all_points_set if i not in self.prev_visited]
+            to_visit = [i for i in self.all_points_set if i not in self.prev_visited]
 
             for self.new_last_point in to_visit:
                 self.new_visited = tuple(sorted(list(self.prev_visited) + [self.new_last_point]))
@@ -1249,32 +1249,27 @@ a = VRP_Problem(number_of_vehicles=2)
 
 original_stdout = sys.stdout  # Save a reference to the original standard output
 
-names = ['randata_05_v1', 'randata_05_v2', 'randata_05_v3', 'randata_05_v4', 'randata_05_v5',
-         'randata_10_v1', 'randata_10_v2', 'randata_10_v3', 'randata_10_v4', 'randata_10_v5',
-         'randata_15_v1', 'randata_15_v2', 'randata_15_v3', 'randata_15_v4', 'randata_15_v5',
-         'randata_20_v1', 'randata_20_v2', 'randata_20_v3', 'randata_20_v4', 'randata_20_v5',
-         'randata_25_v1', 'randata_25_v2', 'randata_25_v3', 'randata_25_v4', 'randata_25_v5',
+names = ['randata_20_v2', 'randata_20_v3', 'randata_20_v4', 'randata_20_v5', 'randata_20_v1', 
+         'randata_25_v1', 'randata_25_v2', 'randata_25_v3', 'randata_25_v4', 'randata_25_v5', 
          'randata_30_v1', 'randata_30_v2', 'randata_30_v3', 'randata_30_v4', 'randata_30_v5']
 
-dup = [False, True, True, True, True, True, False]
-t1 = [False, True, True, True, True, False, True]
-t2 = [False, True, True, True, False, True, True]
-sja = [False, True, True, False, True, True, True]
-dom = [False, True, False, True, True, True, True]
+dup = [True, True, True, True, True, False, False]
+t1 = [True, True, True, True, False, True, False]
+t2 = [True, True, True, False, True, True, False]
+sja = [True, True, False, True, True, True, False]
+dom = [True, False, True, True, True, True, False]
 
-
-with open('log_file.txt', 'a') as f:
-    sys.stdout = f  # Change the standard output to the file we created.
-    for i in range(len(names)):
-
-        for j in range(len(dom)):
+for i in range(len(names)):
+    for j in range(len(dom)):
+        with open('log_file.txt', 'a') as f:
+            sys.stdout = f  # Change the standard output to the file we created.
             print(names[i])
             print(f"dup = {dup[j]}, t1 = {t1[j]}, t2 = {t2[j]}, sja = {sja[j]}, dom = {dom[j]} \n")
             a.Solver(read_in_data=True, data=names[i], random_data=False, instances=7, timeframe=2000,
-                 locationframe=100, servicetime=True, serviceframe=25, travel_times_multiplier=1,
-                 save_name='VRP_testing_05_jobs_2', DUP=dup[j], TW=True, T1=t1[j], T2=t2[j], T3=False, SJA=sja[j], DOM=dom[j])
-            print(f"###COMPLETE_RESULTS:, {names[i]}, {dup[j]}, {t1[j]}, {t2[j]}, {sja[j]},  {dom[j]}, {a.run_time}, {a.optimal_cost}, {a.optimal_path}, {len(a.memo)} \n\n")
-    sys.stdout = original_stdout  # Reset the standard output to its original value
-
-
-#check
+                     locationframe=100, servicetime=True, serviceframe=25, travel_times_multiplier=1,
+                     save_name='VRP_testing_05_jobs_2', DUP=dup[j], TW=True, T1=t1[j], T2=t2[j], T3=False, SJA=sja[j],
+                     DOM=dom[j])
+            print(
+                f"###COMPLETE_RESULTS:, {names[i]}, {dup[j]}, {t1[j]}, {t2[j]}, {sja[j]},  {dom[j]}, {a.run_time}, {a.optimal_cost}, {a.optimal_path}, {len(a.memo)} \n\n")
+            sys.stdout.flush()
+            sys.stdout = original_stdout  # Reset the standard output to its original value
