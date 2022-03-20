@@ -1247,17 +1247,19 @@ class VRP_Problem:
 # logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 a = VRP_Problem(number_of_vehicles=2)
 
-#a.random_data_generator(21, 2000, 100, True, 25, 1, 'randata_30_v10-BW')
+a.random_data_generator(31, 2000, 100, True, 25, 1, 'randata_30_v6-BW')
 
-#input()
+input()
 
 original_stdout = sys.stdout  # Save a reference to the original standard output
 
-names = ['randata_15_v1-BW', 'randata_15_v2-BW', 'randata_15_v3-BW', 'randata_15_v4-BW', 'randata_15_v5-BW',
-         'randata_15_v6-BW', 'randata_15_v7-BW', 'randata_15_v8-BW', 'randata_15_v9-BW', 'randata_15_v10-BW',
-         'randata_20_v1-BW', 'randata_20_v2-BW', 'randata_20_v3-BW', 'randata_20_v4-BW', 'randata_20_v5-BW',
-         'randata_20_v6-BW', 'randata_20_v7-BW', 'randata_20_v8-BW', 'randata_20_v9-BW', 'randata_20_v10-BW',
-         'randata_25_v1-BW', 'randata_25_v2-BW', 'randata_25_v3-BW', 'randata_25_v4-BW', 'randata_25_v5-BW',
+#'randata_15_v1-BW', 'randata_15_v2-BW', 'randata_15_v3-BW', 'randata_15_v4-BW', 'randata_15_v5-BW',
+#         'randata_15_v6-BW', 'randata_15_v7-BW', 'randata_15_v8-BW', 'randata_15_v9-BW', 'randata_15_v10-BW',
+#         'randata_20_v1-BW', 'randata_20_v2-BW', 'randata_20_v3-BW', 'randata_20_v4-BW', 'randata_20_v5-BW',
+#         'randata_20_v6-BW', 'randata_20_v7-BW', 'randata_20_v8-BW', 'randata_20_v9-BW', 'randata_20_v10-BW',
+#         'randata_25_v1-BW', 'randata_25_v2-BW', 
+
+names = ['randata_25_v3-BW', 'randata_25_v4-BW', 'randata_25_v5-BW',
          'randata_25_v6-BW', 'randata_25_v7-BW', 'randata_25_v8-BW', 'randata_25_v9-BW', 'randata_25_v10-BW',
          'randata_30_v1-BW', 'randata_30_v2-BW', 'randata_30_v3-BW', 'randata_30_v4-BW', 'randata_30_v5-BW',
          'randata_30_v6-BW', 'randata_30_v7-BW', 'randata_30_v8-BW', 'randata_30_v9-BW', 'randata_30_v10-BW',
