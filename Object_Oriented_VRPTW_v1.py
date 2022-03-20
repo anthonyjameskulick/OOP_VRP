@@ -1262,7 +1262,7 @@ original_stdout = sys.stdout  # Save a reference to the original standard output
 names = ['randata_25_v3-BW', 'randata_25_v4-BW', 'randata_25_v5-BW',
          'randata_25_v6-BW', 'randata_25_v7-BW', 'randata_25_v8-BW', 'randata_25_v9-BW', 'randata_25_v10-BW',
          'randata_30_v1-BW', 'randata_30_v2-BW', 'randata_30_v3-BW', 'randata_30_v4-BW', 'randata_30_v5-BW',
-         'randata_30_v6-BW', 'randata_30_v7-BW', 'randata_30_v8-BW', 'randata_30_v9-BW', 'randata_30_v10-BW',
+         'randata_30_v6-BW', 'randata_30_v7-BW', 'randata_30_v8-BW', 'randata_30_v9-BW', 'randata_30_v10-BW'
          ]
 
 dup = [True, True, True, True, True, False, False]
