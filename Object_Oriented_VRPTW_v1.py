@@ -1253,17 +1253,17 @@ a = VRP_Problem(number_of_vehicles=2)
 
 original_stdout = sys.stdout  # Save a reference to the original standard output
 
-#'randata_15_v1-BW', 'randata_15_v2-BW', 'randata_15_v3-BW', 'randata_15_v4-BW', 'randata_15_v5-BW',
+#['randata_15_v1-BW', 'randata_15_v2-BW', 'randata_15_v3-BW', 'randata_15_v4-BW', 'randata_15_v5-BW',
 #         'randata_15_v6-BW', 'randata_15_v7-BW', 'randata_15_v8-BW', 'randata_15_v9-BW', 'randata_15_v10-BW',
 #         'randata_20_v1-BW', 'randata_20_v2-BW', 'randata_20_v3-BW', 'randata_20_v4-BW', 'randata_20_v5-BW',
 #         'randata_20_v6-BW', 'randata_20_v7-BW', 'randata_20_v8-BW', 'randata_20_v9-BW', 'randata_20_v10-BW',
-#         'randata_25_v1-BW', 'randata_25_v2-BW',
+#         'randata_25_v1-BW', 'randata_25_v2-BW','randata_25_v3-BW', 'randata_25_v4-BW', 'randata_25_v5-BW',
+#         'randata_25_v6-BW', 'randata_25_v7-BW', 'randata_25_v8-BW', 'randata_25_v9-BW', 'randata_25_v10-BW',
+#         'randata_30_v1-BW', 'randata_30_v2-BW', 'randata_30_v3-BW', 'randata_30_v4-BW', 'randata_30_v5-BW',
+#         'randata_30_v6-BW', 'randata_30_v7-BW', 'randata_30_v8-BW', 'randata_30_v9-BW', 'randata_30_v10-BW']
 
-names = ['randata_25_v3-BW', 'randata_25_v4-BW', 'randata_25_v5-BW',
-         'randata_25_v6-BW', 'randata_25_v7-BW', 'randata_25_v8-BW', 'randata_25_v9-BW', 'randata_25_v10-BW',
-         'randata_30_v1-BW', 'randata_30_v2-BW', 'randata_30_v3-BW', 'randata_30_v4-BW', 'randata_30_v5-BW',
-         'randata_30_v6-BW', 'randata_30_v7-BW', 'randata_30_v8-BW', 'randata_30_v9-BW', 'randata_30_v10-BW'
-         ]
+names = ['randata_15_v1-BW', 'randata_15_v2-BW', 'randata_20_v4-BW', 'randata_20_v5-BW', 'randata_25_v1-BW',
+         'randata_30_v1-BW', 'randata_30_v2-BW', 'randata_30_v5-BW', 'randata_30_v6-BW']
 
 dup = [True, True, True, True, True, False, False]
 t1 = [True, True, True, True, False, True, False]
@@ -1272,18 +1272,17 @@ sja = [True, True, False, True, True, True, False]
 dom = [True, False, True, True, True, True, False]
 
 for i in range(len(names)):
-    #for j in range(len(dom)):
-    with open('log_file_feasible_data.txt', 'a') as f:
-        sys.stdout = f  # Change the standard output to the file we created.
-        print(names[i])
-        print(f"dup = True, t1 = False, t2 = True, sja = True, dom = True \n")
-        a.Solver(read_in_data=True, data=names[i], random_data=False, instances=7, timeframe=2000,
-                 locationframe=100, servicetime=True, serviceframe=25, travel_times_multiplier=1,
-                 save_name='VRP_testing_05_jobs_2', DUP=True, TW=True, T1=False, T2=True, T3=False, SJA=True,
-                 DOM=True)
-        print(f"###COMPLETE_RESULTS:, {names[i]}, True, False, True, True,  True, {a.run_time}, {a.optimal_cost}, {a.optimal_path}, {len(a.memo)} \n\n")
-        sys.stdout.flush()
-        sys.stdout = original_stdout  # Reset the standard output to its original value
+    for j in range(len(dom)):
+        with open('log_file_feasible_data.txt', 'a') as f:
+            sys.stdout = f  # Change the standard output to the file we created.
+            print(names[i])
+            print(f"dup = True, t1 = False, t2 = True, sja = True, dom = True \n")
+            a.Solver(read_in_data=True, data=names[i], random_data=False, instances=7, timeframe=2000,
+                     locationframe=100, servicetime=True, serviceframe=25, travel_times_multiplier=1,
+                     save_name='VRP_testing_05_jobs_2', DUP=dup[j], TW=True, T1=t1[j], T2=t2[j], T3=False, SJA=sja[j],DOM=dom[j])
+            print(f"###COMPLETE_RESULTS:, {names[i]}, True, False, True, True,  True, {a.run_time}, {a.optimal_cost}, {a.optimal_path}, {len(a.memo)} \n\n")
+            sys.stdout.flush()
+            sys.stdout = original_stdout  # Reset the standard output to its original value
 
 
 
