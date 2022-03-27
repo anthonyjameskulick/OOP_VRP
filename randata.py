@@ -2,8 +2,7 @@ import sys
 import csv
 import time
 import numpy as np
-import
-np.random.seed(42)
+import np.random.seed(42)
 import random
 import pandas as pd
 import logging
