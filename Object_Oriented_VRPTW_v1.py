@@ -1273,7 +1273,7 @@ dom = [True, False, True, True, True, True]
 
 for i in range(len(names)):
     for j in range(len(dom)):
-        with open('log_file_feasible_data.txt', 'a') as f:
+        with open('log_file_feasible_data1.txt', 'a') as f:
             sys.stdout = f  # Change the standard output to the file we created.
             print(names[i])
             print(f"dup = {dup[j]}, t1 = {t1[j]}, t2 = {t2[j]}, sja = {sja[j]}, dom = {dom[j]} \n")
