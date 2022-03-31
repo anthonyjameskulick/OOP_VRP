@@ -222,7 +222,7 @@ class VRP_Problem:
             start = random.choices(time0, weights=None, k=instances - 1)
             end = []
             # for i in range(len(start)): end.append(random.randrange(start[i] + 25, timeframe + 25))
-            for i in range(len(start)): end.append(random.randrange(start[i] + 25, start[i] + 225))
+            for i in range(len(start)): end.append(random.randrange(start[i] + 25, start[i] + 500))
             start = [0] + start
             end = [timeframe] + end
             for i in name: self.start_times.append(start[i])
@@ -1246,16 +1246,16 @@ class VRP_Problem:
 # logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
 a = VRP_Problem(number_of_vehicles=2)
 
-#a.random_data_generator(41, 2000, 100, True, 25, 1, 'randata_40_v10-BW')
+#a.random_data_generator(41, 2000, 100, True, 25, 1, 'randata_40_v20-BW')
 
 #input()
 
 original_stdout = sys.stdout  # Save a reference to the original standard output
 
-names = ['randata_35_v1-BW', 'randata_35_v2-BW', 'randata_35_v3-BW', 'randata_35_v4-BW', 'randata_35_v5-BW',
-         'randata_35_v6-BW', 'randata_35_v7-BW', 'randata_35_v8-BW', 'randata_35_v9-BW', 'randata_35_v10-BW',
-         'randata_40_v1-BW', 'randata_40_v2-BW', 'randata_40_v3-BW', 'randata_40_v4-BW', 'randata_40_v5-BW',
-         'randata_40_v6-BW', 'randata_40_v7-BW', 'randata_40_v8-BW', 'randata_40_v9-BW', 'randata_40_v10-BW']
+names = ['randata_35_v11-BW', 'randata_35_v12-BW', 'randata_35_v13-BW', 'randata_35_v14-BW', 'randata_35_v15-BW',
+         'randata_35_v16-BW', 'randata_35_v17-BW', 'randata_35_v18-BW', 'randata_35_v19-BW', 'randata_35_v20-BW',
+         'randata_40_v11-BW', 'randata_40_v12-BW', 'randata_40_v13-BW', 'randata_40_v14-BW', 'randata_40_v15-BW',
+         'randata_40_v16-BW', 'randata_40_v17-BW', 'randata_40_v18-BW', 'randata_40_v19-BW', 'randata_40_v20-BW']
 
 dup = [True, True, True, True, True, False]
 t1 = [True, True, True, True, False, True]
