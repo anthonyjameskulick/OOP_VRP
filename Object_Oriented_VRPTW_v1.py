@@ -1062,7 +1062,7 @@ class VRP_Problem:
         self.special_values()
         self.queue.put((tuple([0]), tuple(self.prev_last_point), tuple(self.prev_time), self.key_version))
         self.memo[tuple([0]), tuple(self.prev_last_point), tuple(self.prev_time), self.key_version] = (
-            tuple([self.prev_dist, self.prev_last_point, self.prev_time, self.vehicle_order, self.prev_key_version]))
+            tuple([self.prev_dist, self.prev_last_point, self.prev_time, selfs.vehicle_order, self.prev_key_version]))
         counter = 0
 
         while self.queue.qsize() != 0:
